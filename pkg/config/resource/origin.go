@@ -25,5 +25,11 @@ type Origin interface {
 
 // Reference provides more information about an Origin. This is also source-implementation dependant.
 type Reference interface {
-	String() string
+	String(hasLineNumber bool) string
+
+	ProcessMap(yamlChunk []byte)
+
+	YamlMap() map[string]interface{}
+
+	FindErrors(sMap map[string]map[string]string) ([]string, []int)
 }

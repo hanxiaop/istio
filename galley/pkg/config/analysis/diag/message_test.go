@@ -70,3 +70,35 @@ func TestMessage_JSON(t *testing.T) {
 	g.Expect(string(j)).To(Equal(`{"code":"IST-0042","documentation_url":"https://istio.io/docs/reference/config/analysis/IST-0042"` +
 		`,"level":"Error","message":"Cheese type not found: \"Feta\"","origin":"toppings/cheese","reference":"path/to/file"}`))
 }
+
+func TestMessage_UpdateLine(t *testing.T) {
+	g := NewGomegaWithT(t)
+	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
+	m := NewMessage(mt, nil, "Feta")
+	m.DocRef = "test-ref"
+	m.line = []int{0}
+	m.UpdateLine(5)
+	g.Expect(m.line[0]).To(Equal(5))
+}
+
+func TestMessage_FindErrorWord(t *testing.T) {
+	g := NewGomegaWithT(t)
+	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
+	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
+	rMap := make(map[string]*resource.Instance)
+	sMap := make (map[string]map[string]map[string]string)
+	m.FindErrorWord(rMap, sMap)
+	key := m.Resource.Origin.Reference().String(false) + m.Type.code + "Feta"
+	g.Expect(key).To(Equal("path/to/fileIST-0042Feta"))
+	_, ok := rMap[key]
+	g.Expect(ok).To(Equal(false))
+}
+
+func TestFindErrorWordHelper(t *testing.T) {
+	g := NewGomegaWithT(t)
+	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
+	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
+	key, value := FindErrorWordHelper(mt.code, []string{"Feta"}, m.Resource)
+	g.Expect(key).To(Equal(""))
+	g.Expect(value).To(Equal(""))
+}

@@ -156,4 +156,16 @@ func (fakeOrigin) Reference() resource.Reference { return fakeReference{} }
 
 type fakeReference struct{}
 
-func (fakeReference) String() string { return "" }
+func (fakeReference) String(bool) string { return "" }
+
+func (fakeReference) ProcessMap([]byte) {
+}
+
+func (fakeReference) YamlMap() map[string]interface{} {
+	yamlMap := make(map[string]interface{})
+	return yamlMap
+}
+
+func (fakeReference) FindErrors(map[string]map[string]string) ([]string, []int) {
+	return []string{}, []int{}
+}

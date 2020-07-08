@@ -42,6 +42,18 @@ type testReference struct {
 	name string
 }
 
-func (r testReference) String() string {
+func (r testReference) String(bool) string {
 	return r.name
+}
+
+func (r testReference) ProcessMap([]byte) {
+}
+
+func (r testReference) YamlMap() map[string]interface{} {
+	yamlMap := make(map[string]interface{})
+	return yamlMap
+}
+
+func (r testReference) FindErrors(map[string]map[string]string) ([]string, []int) {
+	return []string{}, []int{}
 }

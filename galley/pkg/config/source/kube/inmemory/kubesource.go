@@ -304,6 +304,8 @@ func (s *KubeSource) parseChunk(r *collection.Schemas, name string, lineNum int,
 	}
 
 	pos := rt.Position{Filename: name, Line: lineNum}
+	pos.ProcessMap(yamlChunk)
+
 	return kubeResource{
 		schema:   schema,
 		sha:      sha1.Sum(yamlChunk),

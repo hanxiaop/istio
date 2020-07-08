@@ -231,6 +231,38 @@ func (sa *SourceAnalyzer) Analyze(cancel chan struct{}) (AnalysisResult, error) 
 
 	rt.Stop()
 
+	// rMap has unique key to identify the resource that has errors
+	rMap := make(map[string]*resource.Instance)
+	// sMap's structure is like reouseceName->error label->error content->corresponding message with unique key
+	sMap := make(map[string]map[string]map[string]string)
+	// mMap has unique keys to identify different messages
+	mMap := make(map[string]*diag.Message)
+
+	// Construct three maps with given error messages
+	for _, m := range result.Messages {
+		m.FindErrorWord(rMap, sMap)
+		if m.Resource.Origin.Reference() == nil {continue}
+		mKey := m.Resource.Origin.Reference().String(false)+ m.Type.Code()
+		for _, p := range m.Parameters {
+			mKey += fmt.Sprintf("%v", p)
+		}
+		address := m
+		mMap[mKey] = &address
+	}
+
+	// Find exact error line, and update it to the corresponding message
+	for k, v := range rMap {
+		if v.Origin.Reference() != nil && v.Origin.Reference().YamlMap() != nil {
+			message, line := v.Origin.Reference().FindErrors(sMap[k])
+			for i := range message {
+				fmt.Printf("%s %d %s \n", message[i], line[i], mMap[message[i]].String())
+				if m, ok := mMap[message[i]]; ok {
+					m.UpdateLine(line[i])
+				}
+			}
+		}
+	}
+
 	return result, nil
 }
 

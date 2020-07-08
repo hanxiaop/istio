@@ -58,7 +58,57 @@ func TestPositionString(t *testing.T) {
 			g := NewGomegaWithT(t)
 
 			p := Position{Filename: tc.filename, Line: tc.line}
-			g.Expect(p.String()).To(Equal(tc.output))
+			g.Expect(p.String(false)).To(Equal(tc.output))
 		})
 	}
+}
+
+func TestCheckComment(t *testing.T) {
+	yaml := []string{"\n","# line \n", "abc\n"}
+	g := NewGomegaWithT(t)
+	g.Expect(CheckComment(0, yaml)).To(Equal(2))
+}
+
+func TestRemoveQuotation(t *testing.T) {
+	s := "\"test\""
+	g := NewGomegaWithT(t)
+	g.Expect(RemoveQuotation(s)).To(Equal("test"))
+}
+
+func TestMapHelper(t *testing.T) {
+	yaml := []string {"test1: content1","test2:", "  test3: content3"}
+	g := NewGomegaWithT(t)
+	c1 := map[string]int {"content1":1}
+	c3 := map[string]int {"content3":3}
+	smallMap := map[string]interface{} {"test3": c3}
+	resultMap := map[string]interface{} {"test1":c1, "test2":smallMap}
+	resMap, index := MapHelper(yaml, 0, 0, 1)
+	g.Expect(resMap).To(Equal(resultMap))
+	g.Expect(index).To(Equal(3))
+}
+
+func TestFindErrorsHelper(t *testing.T) {
+	map1 := map[string]string {"test":"result"}
+	para := map[string]int {"test":1}
+	r1, r2 := FindErrorsHelper(map1, para)
+	g := NewGomegaWithT(t)
+	g.Expect(r1).To(Equal([]string {"result"}))
+	g.Expect(r2).To(Equal([]int {1}))
+}
+
+func TestPosition_FindErrors(t *testing.T) {
+	p := Position{Filename: "test", Line: 1}
+	c1 := map[string]int {"content1":1}
+	c3 := map[string]int {"content3":3}
+	smallMap := map[string]interface{} {"test3": c3}
+	resultMap := map[string]interface{} {"test1":c1, "test2":smallMap}
+	p.ChunkMap = resultMap
+
+	inputNestMap := map[string]string {"content3": "testResult"}
+	outerMap := map[string]map[string]string {"test2": inputNestMap}
+
+	messageRes, lineRes := p.FindErrors(outerMap)
+	g := NewGomegaWithT(t)
+	g.Expect(messageRes).To(Equal([]string {"testResult"}))
+	g.Expect(lineRes).To(Equal([]int {3}))
 }

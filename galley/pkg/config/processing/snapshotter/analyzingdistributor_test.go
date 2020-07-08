@@ -534,6 +534,18 @@ type fakeReference struct {
 	name string
 }
 
-func (r fakeReference) String() string {
+func (r fakeReference) String(bool) string {
 	return r.name
+}
+
+func (r fakeReference) ProcessMap([]byte) {
+}
+
+func (r fakeReference) YamlMap() map[string]interface{} {
+	yamlMap := make(map[string]interface{})
+	return yamlMap
+}
+
+func (r fakeReference) FindErrors(map[string]map[string]string) ([]string, []int) {
+	return []string{}, []int{}
 }

@@ -85,7 +85,19 @@ type reference struct {
 	name string
 }
 
-func (r reference) String() string { return r.name }
+func (r reference) String(bool) string { return r.name }
+
+func (r reference) ProcessMap([]byte) {
+}
+
+func (r reference) YamlMap() map[string]interface{} {
+	yamlMap := make(map[string]interface{})
+	return yamlMap
+}
+
+func (r reference) FindErrors(map[string]map[string]string) ([]string, []int) {
+	return []string{}, []int{}
+}
 
 // This is a very basic benchmark on unit test data, so it doesn't tell us anything about how an analyzer performs at scale
 func BenchmarkAnalyzers(b *testing.B) {

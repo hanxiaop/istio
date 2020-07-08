@@ -42,6 +42,18 @@ func (o origin) Reference() resource.Reference {
 
 type reference string
 
-func (r reference) String() string {
+func (r reference) String(bool) string {
 	return string(r)
+}
+
+func (r reference) ProcessMap([]byte) {
+}
+
+func (r reference) YamlMap() map[string]interface{} {
+	yamlMap := make(map[string]interface{})
+	return yamlMap
+}
+
+func (r reference) FindErrors(map[string]map[string]string) ([]string, []int) {
+	return []string{}, []int{}
 }
