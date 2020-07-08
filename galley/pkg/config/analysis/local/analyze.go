@@ -255,7 +255,6 @@ func (sa *SourceAnalyzer) Analyze(cancel chan struct{}) (AnalysisResult, error) 
 		if v.Origin.Reference() != nil && v.Origin.Reference().YamlMap() != nil {
 			message, line := v.Origin.Reference().FindErrors(sMap[k])
 			for i := range message {
-				fmt.Printf("%s %d %s \n", message[i], line[i], mMap[message[i]].String())
 				if m, ok := mMap[message[i]]; ok {
 					m.UpdateLine(line[i])
 				}
