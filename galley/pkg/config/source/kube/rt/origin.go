@@ -207,7 +207,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 
 		colonInd := strings.Index(newString, ":")
 
-		if colonInd > 0 && colonInd != len(newString) - 1 {
+		if colonInd > 0 && colonInd != len(newString)-1 {
 			pair := strings.Split(newString, ":")
 			pair[0], pair[1] = RemoveQuotation(pair[0]), RemoveQuotation(pair[1])
 			if val, ok := res[pair[0]]; ok {
@@ -267,11 +267,13 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 						res[key] = []map[string]interface{}{}
 						res[key] = append(res[key].([]map[string]interface{}), firstMap.(map[string]interface{}))
 					}
+					if fmt.Sprintf("%T", res[key]) == "[]map[string]int" {
+						return res, nextInd
+					}
 					res[key] = append(res[key].([]map[string]interface{}), newRes)
 				} else {
 					res[key] = newRes
 				}
-				res[key] = newRes
 				nextInd = newInd
 			}
 		}
