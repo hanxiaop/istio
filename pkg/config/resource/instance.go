@@ -40,4 +40,3 @@ func (r *Instance) Clone() *Instance {
 	result.Metadata = r.Metadata.Clone()
 	return result
 }
-

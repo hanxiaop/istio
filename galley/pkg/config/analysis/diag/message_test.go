@@ -86,7 +86,7 @@ func TestMessage_FindErrorWord(t *testing.T) {
 	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
 	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
 	rMap := make(map[string]*resource.Instance)
-	sMap := make (map[string]map[string]map[string]string)
+	sMap := make(map[string]map[string]map[string]string)
 	m.FindErrorWord(rMap, sMap)
 	key := m.Resource.Origin.Reference().String(false) + m.Type.code + "Feta"
 	g.Expect(key).To(Equal("path/to/fileIST-0042Feta"))

@@ -75,9 +75,9 @@ func (m *Message) Unstructured(includeOrigin bool) map[string]interface{} {
 		result["origin"] = m.Resource.Origin.FriendlyName()
 		if m.Resource.Origin.Reference() != nil {
 			var loc string
-			if len(m.line) != 0 && m.line[0] != 0{
+			if len(m.line) != 0 && m.line[0] != 0 {
 				loc = " " + m.Resource.Origin.Reference().String(true) + fmt.Sprintf("%d", m.line[0])
-			}else {
+			} else {
 				loc = " " + m.Resource.Origin.Reference().String(false)
 			}
 			result["reference"] = loc
@@ -100,9 +100,9 @@ func (m *Message) String() string {
 	if m.Resource != nil {
 		loc := ""
 		if m.Resource.Origin.Reference() != nil {
-			if len(m.line) != 0 && m.line[0] != 0{
+			if len(m.line) != 0 && m.line[0] != 0 {
 				loc = " " + m.Resource.Origin.Reference().String(true) + fmt.Sprintf("%d", m.line[0])
-			}else {
+			} else {
 				loc = " " + m.Resource.Origin.Reference().String(false)
 			}
 		}
@@ -134,13 +134,13 @@ func (m *Message) FindErrorWord(rMap map[string]*resource.Instance, sMap map[str
 		rMap[resourceName] = mAddress
 	}
 	var para []string
-	mKey := m.Resource.Origin.Reference().String(false)+ m.Type.Code()
+	mKey := m.Resource.Origin.Reference().String(false) + m.Type.Code()
 	for _, p := range m.Parameters {
 		para = append(para, fmt.Sprintf("%v", p))
 		mKey += fmt.Sprintf("%v", p)
 	}
 	resKey, resValue := FindErrorWordHelper(m.Type.code, para, m.Resource)
-	if mKey != ""  && resKey != "" && resValue != ""{
+	if mKey != "" && resKey != "" && resValue != "" {
 		if sMap[resourceName] == nil {
 			sMap[resourceName] = make(map[string]map[string]string)
 		}
@@ -151,7 +151,7 @@ func (m *Message) FindErrorWord(rMap map[string]*resource.Instance, sMap map[str
 	}
 }
 
-func (m *Message) LineNumber() []int{
+func (m *Message) LineNumber() []int {
 	return m.line
 }
 
@@ -170,7 +170,7 @@ func NewMessage(mt *MessageType, r *resource.Instance, p ...interface{}) Message
 		Type:       mt,
 		Resource:   r,
 		Parameters: p,
-		line: []int{0},
+		line:       []int{0},
 	}
 }
 
@@ -191,24 +191,24 @@ func FindErrorWordHelper(eCode string, para []string, r *resource.Instance) (str
 			}
 			equalInd := strings.Index(resValue, "=")
 			resKey = resValue[:equalInd]
-			resValue = resValue[equalInd + 1:]
+			resValue = resValue[equalInd+1:]
 		} else if resKey == "host+subset in destinationrule" {
 			resKey = "subset"
-			resValue = resValue[strings.Index(resValue, "+") + 1:]
-		}else if resKey == "host:port" {
+			resValue = resValue[strings.Index(resValue, "+")+1:]
+		} else if resKey == "host:port" {
 			resKey = "port"
-			resValue = resValue[strings.Index(resValue, ":") + 1:]
-		}else {
+			resValue = resValue[strings.Index(resValue, ":")+1:]
+		} else {
 			resKey = para[0]
 		}
 	case "IST0104":
 		equalInd := strings.Index(para[0], "=")
 		resKey = para[0][:equalInd]
-		resValue = para[0][equalInd + 1:]
+		resValue = para[0][equalInd+1:]
 	case "IST0110":
 		resKey = "name"
 		friendlyName := r.Origin.FriendlyName()
-		friendlyName = friendlyName[strings.Index(friendlyName, " ") + 1:]
+		friendlyName = friendlyName[strings.Index(friendlyName, " ")+1:]
 		dotIndex := strings.Index(friendlyName, ".")
 		if dotIndex > 0 {
 			friendlyName = friendlyName[:dotIndex]
@@ -217,7 +217,7 @@ func FindErrorWordHelper(eCode string, para []string, r *resource.Instance) (str
 	case "IST0111":
 		resKey = "name"
 		friendlyName := r.Origin.FriendlyName()
-		friendlyName = friendlyName[strings.Index(friendlyName, " ") + 1:]
+		friendlyName = friendlyName[strings.Index(friendlyName, " ")+1:]
 		dotIndex := strings.Index(friendlyName, ".")
 		if dotIndex > 0 {
 			friendlyName = friendlyName[:dotIndex]

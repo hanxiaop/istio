@@ -65,9 +65,9 @@ func (o *Origin) Reference() resource.Reference {
 
 // Position is a representation of the location of a source.
 type Position struct {
-	Filename string // filename, if any
-	Line     int    // line number, starting at 1
-	ChunkMap    map[string]interface{} // map with key-value pairs from yaml chunk
+	Filename string                 // filename, if any
+	Line     int                    // line number, starting at 1
+	ChunkMap map[string]interface{} // map with key-value pairs from yaml chunk
 }
 
 // String outputs the string representation of the position.
@@ -90,7 +90,7 @@ func (p *Position) isValid() bool {
 }
 
 func (p *Position) ProcessMap(yamlChunk []byte) {
-	yamlInfo :=	string(yamlChunk)
+	yamlInfo := string(yamlChunk)
 	yamlInfoArray := strings.Split(yamlInfo, "\n")
 	keyMap, _ := MapHelper(yamlInfoArray, 0, 0, p.Line)
 	p.ChunkMap = keyMap
@@ -117,7 +117,7 @@ func (p *Position) FindErrors(sMap map[string]map[string]string) ([]string, []in
 		frontValue := front.Value
 		if fmt.Sprintf("%T", frontValue) == "map[string]interface {}" {
 			temp := frontValue.(map[string]interface{})
-			for k := range  temp{
+			for k := range temp {
 				if v, ok := sMap[k]; ok {
 					mRes, lRes := FindErrorsHelper(v, temp[k])
 					if len(mRes) > 0 {
@@ -133,8 +133,8 @@ func (p *Position) FindErrors(sMap map[string]map[string]string) ([]string, []in
 				}
 				if fmt.Sprintf("%T", temp[k]) == "map[string]interface {}" {
 					queue.PushBack(temp[k])
-				}else if fmt.Sprintf("%T", temp[k]) == "[]map[string]interface {}" {
-					newVal := temp[k].([]map[string]interface {})
+				} else if fmt.Sprintf("%T", temp[k]) == "[]map[string]interface {}" {
+					newVal := temp[k].([]map[string]interface{})
 					for _, v := range newVal {
 						queue.PushBack(v)
 					}
@@ -158,7 +158,7 @@ func FindErrorsHelper(sMap map[string]string, para interface{}) ([]string, []int
 				lRes = append(lRes, v)
 			}
 		}
-	}else if fmt.Sprintf("%T", para) == "map[string]interface {}" {
+	} else if fmt.Sprintf("%T", para) == "map[string]interface {}" {
 		resMap := para.(map[string]interface{})
 		for _, v := range resMap {
 			mV, lV := FindErrorsHelper(sMap, v)
@@ -167,8 +167,8 @@ func FindErrorsHelper(sMap map[string]string, para interface{}) ([]string, []int
 				lRes = append(lRes, lV...)
 			}
 		}
-	}else if fmt.Sprintf("%T", para) == "[]map[string]interface {}" {
-		resMap := para.([]map[string]interface {})
+	} else if fmt.Sprintf("%T", para) == "[]map[string]interface {}" {
+		resMap := para.([]map[string]interface{})
 		for _, v := range resMap {
 			mV, lV := FindErrorsHelper(sMap, v)
 			if len(mV) > 0 {
@@ -207,7 +207,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 
 		colonInd := strings.Index(newString, ":")
 
-		if colonInd != len(newString) - 1 {
+		if colonInd != len(newString)-1 {
 			pair := strings.Split(newString, ":")
 			pair[0], pair[1] = RemoveQuotation(pair[0]), RemoveQuotation(pair[1])
 			if val, ok := res[pair[0]]; ok {
@@ -216,14 +216,14 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 					res[pair[0]] = []map[string]int{}
 					res[pair[0]] = append(res[pair[0]].([]map[string]int), firstMap.(map[string]int))
 				}
-				res[pair[0]] = append(res[pair[0]].([]map[string]int), map[string]int{pair[1]:nextInd + startLine})
-			}else {
+				res[pair[0]] = append(res[pair[0]].([]map[string]int), map[string]int{pair[1]: nextInd + startLine})
+			} else {
 				res[pair[0]] = make(map[string]int)
 				res[pair[0]].(map[string]int)[pair[1]] = nextInd + startLine
 			}
 			nextInd += 1
-		}else {
-			key := RemoveQuotation(newString[:len(newString) - 1])
+		} else {
+			key := RemoveQuotation(newString[:len(newString)-1])
 			nextInd += 1
 
 			if nextInd >= len(yamlChunk) {
@@ -242,7 +242,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 			if strings.Index(newString, ":") < 0 {
 				res[key] = []map[string]int{}
 				for strings.Index(newString, ":") < 0 {
-					tMap := map[string]int{newString:nextInd + startLine}
+					tMap := map[string]int{newString: nextInd + startLine}
 					res[key] = append(res[key].([]map[string]int), tMap)
 					nextInd += 1
 
@@ -259,7 +259,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 					curStr := yamlChunk[nextInd]
 					numSpace, _, newString = FindSpaceNum(curStr)
 				}
-			}else {
+			} else {
 				newRes, newInd := MapHelper(yamlChunk, nextInd, numSpace, startLine)
 				if val, ok := res[key]; ok {
 					if fmt.Sprintf("%T", res[key]) == "map[string]interface {}" {
@@ -268,7 +268,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 						res[key] = append(res[key].([]map[string]interface{}), firstMap.(map[string]interface{}))
 					}
 					res[key] = append(res[key].([]map[string]interface{}), newRes)
-				}else {
+				} else {
 					res[key] = newRes
 				}
 				res[key] = newRes
@@ -282,7 +282,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 }
 
 // return space number in front, flag to show if it is an array, and new trimed string
-func FindSpaceNum(s string)  (int, bool, string) {
+func FindSpaceNum(s string) (int, bool, string) {
 	newS := strings.TrimSpace(s)
 	isArray := false
 	if newS[0] == '-' {
@@ -290,7 +290,7 @@ func FindSpaceNum(s string)  (int, bool, string) {
 		newS = newS[2:]
 	}
 	commentInd := strings.Index(newS, "#")
-	if commentInd > 0{
+	if commentInd > 0 {
 		newS = newS[:commentInd]
 	}
 	numSpace := strings.Index(s, newS[:1])
@@ -302,8 +302,8 @@ func RemoveQuotation(s string) string {
 	if len(newS) > 0 && newS[0] == '"' {
 		newS = newS[1:]
 	}
-	if len(newS) > 0 && newS[len(newS) - 1] == '"' {
-		newS = newS[:len(newS) - 1]
+	if len(newS) > 0 && newS[len(newS)-1] == '"' {
+		newS = newS[:len(newS)-1]
 	}
 	return newS
 }
@@ -320,7 +320,7 @@ func CheckComment(curInd int, yamlChunk []string) int {
 	return tempInd
 }
 
-func CheckCommentHelper(s string, ind int) int  {
+func CheckCommentHelper(s string, ind int) int {
 	newS := strings.TrimSpace(s)
 	if len(newS) == 0 || newS[0] == '#' {
 		return ind + 1

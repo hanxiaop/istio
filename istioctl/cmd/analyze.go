@@ -448,9 +448,9 @@ func renderMessage(m diag.Message) string {
 	if m.Resource != nil {
 		loc := ""
 		if m.Resource.Origin.Reference() != nil {
-			if len(m.LineNumber()) != 0 && m.LineNumber()[0] != 0{
+			if len(m.LineNumber()) != 0 && m.LineNumber()[0] != 0 {
 				loc = " " + m.Resource.Origin.Reference().String(true) + fmt.Sprintf("%d", m.LineNumber()[0])
-			}else {
+			} else {
 				loc = " " + m.Resource.Origin.Reference().String(false)
 			}
 		}
