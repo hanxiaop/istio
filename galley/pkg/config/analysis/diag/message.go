@@ -183,12 +183,9 @@ func FindErrorWordHelper(eCode string, para []string, r *resource.Instance) (str
 	case "IST0101":
 		resKey = para[0]
 		resValue = para[1]
-		if para[0] == "gateway" {
+		if resKey == "gateway" {
 			resKey = "gateways"
 		} else if resKey == "selector" {
-			if fmt.Sprintf("%v", r.Metadata.Schema.Kind()) == "Sidecar" {
-				resKey = "workloadSelector"
-			}
 			equalInd := strings.Index(resValue, "=")
 			resKey = resValue[:equalInd]
 			resValue = resValue[equalInd+1:]

@@ -78,7 +78,7 @@ func (p *Position) String(hasLineNumber bool) string {
 		if s != "" {
 			s += ":"
 		}
-		if hasLineNumber == false {
+		if !hasLineNumber {
 			s += fmt.Sprintf("%d", p.Line)
 		}
 	}
@@ -207,7 +207,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 
 		colonInd := strings.Index(newString, ":")
 
-		if colonInd != len(newString)-1 {
+		if colonInd > 0 && colonInd != len(newString) - 1 {
 			pair := strings.Split(newString, ":")
 			pair[0], pair[1] = RemoveQuotation(pair[0]), RemoveQuotation(pair[1])
 			if val, ok := res[pair[0]]; ok {
@@ -221,10 +221,10 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 				res[pair[0]] = make(map[string]int)
 				res[pair[0]].(map[string]int)[pair[1]] = nextInd + startLine
 			}
-			nextInd += 1
+			nextInd++
 		} else {
 			key := RemoveQuotation(newString[:len(newString)-1])
-			nextInd += 1
+			nextInd++
 
 			if nextInd >= len(yamlChunk) {
 				return res, nextInd
@@ -239,12 +239,12 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 			curStr := yamlChunk[nextInd]
 			numSpace, _, newString = FindSpaceNum(curStr)
 			newString = RemoveQuotation(newString)
-			if strings.Index(newString, ":") < 0 {
+			if !strings.Contains(newString, ":") {
 				res[key] = []map[string]int{}
-				for strings.Index(newString, ":") < 0 {
+				for !strings.Contains(newString, ":") {
 					tMap := map[string]int{newString: nextInd + startLine}
 					res[key] = append(res[key].([]map[string]int), tMap)
-					nextInd += 1
+					nextInd++
 
 					if nextInd >= len(yamlChunk) {
 						return res, nextInd
@@ -257,7 +257,7 @@ func MapHelper(yamlChunk []string, index int, space int, startLine int) (map[str
 					}
 
 					curStr := yamlChunk[nextInd]
-					numSpace, _, newString = FindSpaceNum(curStr)
+					_, _, newString = FindSpaceNum(curStr)
 				}
 			} else {
 				newRes, newInd := MapHelper(yamlChunk, nextInd, numSpace, startLine)
