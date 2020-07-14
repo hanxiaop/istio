@@ -15,6 +15,7 @@
 package gateway
 
 import (
+	"istio.io/istio/galley/pkg/config/analysis/analyzers/util"
 	v1 "k8s.io/api/core/v1"
 	k8s_labels "k8s.io/apimachinery/pkg/labels"
 
@@ -96,7 +97,10 @@ func (*IngressGatewayPortAnalyzer) analyzeGateway(r *resource.Instance, c analys
 
 	// Report if we found no pods matching this gateway's selector
 	if gwSelectorMatches == 0 {
-		c.Report(collections.IstioNetworkingV1Alpha3Gateways.Name(), msg.NewReferencedResourceNotFound(r, "selector", gwSelector.String()))
+		m := msg.NewReferencedResourceNotFound(r, "selector", gwSelector.String())
+		line := util.ErrorLineForGatewaySelector(gwSelector, r)
+		m.SetLine(line)
+		c.Report(collections.IstioNetworkingV1Alpha3Gateways.Name(), m)
 		return
 	}
 
@@ -105,7 +109,10 @@ func (*IngressGatewayPortAnalyzer) analyzeGateway(r *resource.Instance, c analys
 		if server.Port != nil {
 			_, ok := servicePorts[server.Port.Number]
 			if !ok {
-				c.Report(collections.IstioNetworkingV1Alpha3Gateways.Name(), msg.NewGatewayPortNotOnWorkload(r, gwSelector.String(), int(server.Port.Number)))
+				m := msg.NewGatewayPortNotOnWorkload(r, gwSelector.String(), int(server.Port.Number))
+				line := util.ErrorLineForGatewaySelector(gwSelector, r)
+				m.SetLine(line)
+				c.Report(collections.IstioNetworkingV1Alpha3Gateways.Name(), m)
 			}
 		}
 	}
