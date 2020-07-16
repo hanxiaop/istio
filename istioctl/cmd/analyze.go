@@ -448,11 +448,9 @@ func renderMessage(m diag.Message) string {
 	if m.Resource != nil {
 		loc := ""
 		if m.Resource.Origin.Reference() != nil {
-			if m.Resource.Origin.Reference() != nil {
-				loc = " " + m.Resource.Origin.Reference().String()
-				if m.GetLine() != 0 {
-					loc = m.ReplaceLine(loc)
-				}
+			loc = " " + m.Resource.Origin.Reference().String()
+			if m.GetLine() != 0 {
+				loc = m.ReplaceLine(loc)
 			}
 		}
 		origin = " (" + m.Resource.Origin.FriendlyName() + loc + ")"
