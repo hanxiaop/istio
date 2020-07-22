@@ -86,10 +86,11 @@ func (a *SelectorAnalyzer) Analyze(c analysis.Context) {
 		})
 
 		if !foundPod {
-
-			line := util.ErrorLineForWorkLoadSelector(sel, rs)
 			m := msg.NewReferencedResourceNotFound(rs, "selector", sel.String())
-			m.SetLine(line)
+
+			if line, ok := util.ErrorLineForWorkLoadSelector(rs, sel); ok {
+				m.Line = line
+			}
 
 			c.Report(collections.IstioNetworkingV1Alpha3Sidecars.Name(), m)
 		}
@@ -106,10 +107,12 @@ func (a *SelectorAnalyzer) Analyze(c analysis.Context) {
 
 		for _, rs := range sList {
 
-			line := util.ErrorLineForMetaDataName(rs)
 			m := msg.NewConflictingSidecarWorkloadSelectors(rs, sNames,
 				p.Namespace.String(), p.Name.String())
-			m.SetLine(line)
+
+			if line, ok := util.ErrorLineForMetaDataName(rs); ok {
+				m.Line = line
+			}
 
 			c.Report(collections.IstioNetworkingV1Alpha3Sidecars.Name(), m)
 		}
