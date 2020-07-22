@@ -84,10 +84,11 @@ outer:
 
 		annotationDef := lookupAnnotation(ann)
 		if annotationDef == nil {
-
 			m := msg.NewUnknownAnnotation(r, ann)
-			line := util.ErrorLineForAnnotation(ann, r)
-			m.SetLine(line)
+
+			if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+				m.Line = line
+			}
 
 			ctx.Report(collectionType, m)
 			continue
@@ -102,10 +103,11 @@ outer:
 
 		attachesTo := resourceTypesAsStrings(annotationDef.Resources)
 		if !contains(attachesTo, kind) {
-
-			line := util.ErrorLineForAnnotation(ann, r)
 			m := msg.NewMisplacedAnnotation(r, ann, strings.Join(attachesTo, ", "))
-			m.SetLine(line)
+
+			if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+				m.Line = line
+			}
 
 			ctx.Report(collectionType, m)
 			continue
@@ -116,10 +118,11 @@ outer:
 		validationFunction := inject.AnnotationValidation[ann]
 		if validationFunction != nil {
 			if err := validationFunction(value); err != nil {
-
-				line := util.ErrorLineForAnnotation(ann, r)
 				m := msg.NewInvalidAnnotation(r, ann, err.Error())
-				m.SetLine(line)
+
+				if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+					m.Line = line
+				}
 
 				ctx.Report(collectionType, m)
 				continue
