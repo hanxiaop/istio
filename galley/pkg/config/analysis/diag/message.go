@@ -61,7 +61,7 @@ type Message struct {
 	// DocRef is an optional reference tracker for the documentation URL
 	DocRef string
 
-	line int
+	Line int
 }
 
 // Unstructured returns this message as a JSON-style unstructured map
@@ -75,7 +75,7 @@ func (m *Message) Unstructured(includeOrigin bool) map[string]interface{} {
 		if m.Resource.Origin.Reference() != nil {
 
 			loc := m.Resource.Origin.Reference().String()
-			if m.line != 0 {
+			if m.Line != 0 {
 				loc = m.ReplaceLine(loc)
 			}
 			result["reference"] = loc
@@ -99,7 +99,7 @@ func (m *Message) String() string {
 		loc := ""
 		if m.Resource.Origin.Reference() != nil {
 			loc = " " + m.Resource.Origin.Reference().String()
-			if m.GetLine() != 0 {
+			if m.Line != 0 {
 				loc = m.ReplaceLine(loc)
 			}
 		}
@@ -132,16 +132,6 @@ func NewMessage(mt *MessageType, r *resource.Instance, p ...interface{}) Message
 	}
 }
 
-// SetLine sets the error line number of the message
-func (m *Message) SetLine(l int) {
-	m.line = l
-}
-
-// GetLine gets the error line number of the message
-func (m *Message) GetLine() int {
-	return m.line
-}
-
 // ReplaceLine replaces the line number from the input String method of the Reference object to the line from the Message object
 func (m Message) ReplaceLine(l string) string {
 	loc := l
@@ -150,6 +140,6 @@ func (m Message) ReplaceLine(l string) string {
 		loc = loc[:len(loc)-1]
 		_, err = strconv.Atoi(string(loc[len(loc)-1]))
 	}
-	loc += fmt.Sprintf("%d", m.GetLine())
+	loc += fmt.Sprintf("%d", m.Line)
 	return loc
 }
