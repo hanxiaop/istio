@@ -27,7 +27,7 @@ import (
 	"istio.io/istio/pkg/config/schema/collections"
 )
 
-// DestinationHostAnalyzer checks the Destination hosts associated with each virtual service
+// DestinationHostAnalyzer checks the destination hosts associated with each virtual service
 type DestinationHostAnalyzer struct{}
 
 var _ analysis.Analyzer = &DestinationHostAnalyzer{}
@@ -41,7 +41,7 @@ type hostAndSubset struct {
 func (a *DestinationHostAnalyzer) Metadata() analysis.Metadata {
 	return analysis.Metadata{
 		Name:        "virtualservice.DestinationHostAnalyzer",
-		Description: "Checks the Destination hosts associated with each virtual service",
+		Description: "Checks the destination hosts associated with each virtual service",
 		Inputs: collection.Names{
 			collections.IstioNetworkingV1Alpha3Serviceentries.Name(),
 			collections.IstioNetworkingV1Alpha3Virtualservices.Name(),
@@ -72,7 +72,8 @@ func (a *DestinationHostAnalyzer) analyzeVirtualService(r *resource.Instance, ct
 
 			m := msg.NewReferencedResourceNotFound(r, "host", d.Destination.GetHost())
 
-			if line, ok := util.ErrorLineForHostInDestination(r, d.RouteRule, d.ServiceIndex, d.DestinationIndex); ok {
+			pathKeyForLine := fmt.Sprintf(util.DestinationHost, d.RouteRule, d.ServiceIndex, d.DestinationIndex)
+			if line, found := util.ErrorLine(r, pathKeyForLine); found {
 				m.Line = line
 			}
 
@@ -88,7 +89,8 @@ func (a *DestinationHostAnalyzer) analyzeVirtualService(r *resource.Instance, ct
 
 			m := msg.NewReferencedResourceNotFound(r, "mirror host", d.Destination.GetHost())
 
-			if line, ok := util.ErrorLineForHostInHTTPMirror(r, d.ServiceIndex); ok {
+			pathKeyForLine := fmt.Sprintf(util.MirrorHost, d.ServiceIndex)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 
@@ -99,9 +101,9 @@ func (a *DestinationHostAnalyzer) analyzeVirtualService(r *resource.Instance, ct
 	}
 }
 
-func checkServiceEntryPorts(ctx analysis.Context, r *resource.Instance, d *Destination, s *v1alpha3.ServiceEntry) {
+func checkServiceEntryPorts(ctx analysis.Context, r *resource.Instance, d *AnnotatedDestination, s *v1alpha3.ServiceEntry) {
 	if d.Destination.GetPort() == nil {
-		// If Destination port isn't specified, it's only a problem if the service being referenced exposes multiple ports.
+		// If destination port isn't specified, it's only a problem if the service being referenced exposes multiple ports.
 		if len(s.GetPorts()) > 1 {
 			var portNumbers []int
 			for _, p := range s.GetPorts() {
@@ -110,13 +112,14 @@ func checkServiceEntryPorts(ctx analysis.Context, r *resource.Instance, d *Desti
 
 			m := msg.NewVirtualServiceDestinationPortSelectorRequired(r, d.Destination.GetHost(), portNumbers)
 
-			if d.RouteRule == "" {
-				if line, ok := util.ErrorLineForHostInHTTPMirror(r, d.ServiceIndex); ok {
+			if d.RouteRule == "http.mirror" {
+				pathKeyForLine := fmt.Sprintf(util.MirrorHost, d.ServiceIndex)
+				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 					m.Line = line
 				}
 			} else {
-				if line, ok := util.ErrorLineForHostInDestination(r, d.RouteRule,
-					d.ServiceIndex, d.DestinationIndex); ok {
+				pathKeyForLine := fmt.Sprintf(util.DestinationHost, d.RouteRule, d.ServiceIndex, d.DestinationIndex)
+				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 					m.Line = line
 				}
 			}
@@ -137,20 +140,21 @@ func checkServiceEntryPorts(ctx analysis.Context, r *resource.Instance, d *Desti
 		}
 	}
 	if !foundPort {
+
 		m := msg.NewReferencedResourceNotFound(r, "host:port",
 			fmt.Sprintf("%s:%d", d.Destination.GetHost(), d.Destination.GetPort().GetNumber()))
 
-		if d.RouteRule == "" {
-			if line, ok := util.ErrorLineForHostInHTTPMirror(r, d.ServiceIndex); ok {
+		if d.RouteRule == "http.mirror" {
+			pathKeyForLine := fmt.Sprintf(util.MirrorHost, d.ServiceIndex)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 		} else {
-			if line, ok := util.ErrorLineForHostInDestination(r, d.RouteRule,
-				d.ServiceIndex, d.DestinationIndex); ok {
+			pathKeyForLine := fmt.Sprintf(util.DestinationHost, d.RouteRule, d.ServiceIndex, d.DestinationIndex)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 		}
-
 		ctx.Report(collections.IstioNetworkingV1Alpha3Virtualservices.Name(), m)
 	}
 }

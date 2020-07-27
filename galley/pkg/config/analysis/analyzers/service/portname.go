@@ -15,6 +15,8 @@
 package service
 
 import (
+	"fmt"
+
 	"istio.io/istio/galley/pkg/config/analysis"
 	"istio.io/istio/galley/pkg/config/analysis/analyzers/util"
 	"istio.io/istio/galley/pkg/config/analysis/msg"
@@ -70,7 +72,8 @@ func (s *PortNameAnalyzer) analyzeService(r *resource.Instance, c analysis.Conte
 			m := msg.NewPortNameIsNotUnderNamingConvention(
 				r, port.Name, int(port.Port), port.TargetPort.String())
 
-			if line, ok := util.ErrorLineForPortInService(r, i); ok {
+			pathKeyForLine := fmt.Sprintf(util.PortInPorts, i)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 

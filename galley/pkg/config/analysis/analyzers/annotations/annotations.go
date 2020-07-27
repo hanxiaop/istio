@@ -15,6 +15,7 @@
 package annotations
 
 import (
+	"fmt"
 	"strings"
 
 	"istio.io/istio/galley/pkg/config/analysis/analyzers/util"
@@ -86,7 +87,8 @@ outer:
 		if annotationDef == nil {
 			m := msg.NewUnknownAnnotation(r, ann)
 
-			if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+			pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 
@@ -105,7 +107,8 @@ outer:
 		if !contains(attachesTo, kind) {
 			m := msg.NewMisplacedAnnotation(r, ann, strings.Join(attachesTo, ", "))
 
-			if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+			pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 
@@ -120,7 +123,8 @@ outer:
 			if err := validationFunction(value); err != nil {
 				m := msg.NewInvalidAnnotation(r, ann, err.Error())
 
-				if line, ok := util.ErrorLineForAnnotation(r, ann); ok {
+				pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
+				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 					m.Line = line
 				}
 
