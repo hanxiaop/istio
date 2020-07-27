@@ -15,6 +15,8 @@
 package virtualservice
 
 import (
+	"fmt"
+
 	"istio.io/api/networking/v1alpha3"
 
 	"istio.io/istio/galley/pkg/config/analysis"
@@ -63,7 +65,8 @@ func (s *GatewayAnalyzer) analyzeVirtualService(r *resource.Instance, c analysis
 		if !c.Exists(collections.IstioNetworkingV1Alpha3Gateways.Name(), resource.NewShortOrFullName(vsNs, gwName)) {
 			m := msg.NewReferencedResourceNotFound(r, "gateway", gwName)
 
-			if line, ok := util.ErrorLineForVSGateway(r, i); ok {
+			pathKeyForLine := fmt.Sprintf(util.VSGateway, i)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 

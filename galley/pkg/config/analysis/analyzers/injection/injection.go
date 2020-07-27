@@ -15,6 +15,7 @@
 package injection
 
 import (
+	"fmt"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
@@ -75,7 +76,8 @@ func (a *Analyzer) Analyze(c analysis.Context) {
 
 			m := msg.NewNamespaceNotInjected(r, r.Metadata.FullName.String(), r.Metadata.FullName.String())
 
-			if line, ok := util.ErrorLineForMetaDataName(r); ok {
+			pathKeyForLine := fmt.Sprintf(util.MetadataName)
+			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 				m.Line = line
 			}
 
@@ -90,7 +92,8 @@ func (a *Analyzer) Analyze(c analysis.Context) {
 					r.Metadata.FullName.String(),
 					r.Metadata.FullName.String())
 
-				if line, ok := util.ErrorLineForMetaDataName(r); ok {
+				pathKeyForLine := fmt.Sprintf(util.MetadataName)
+				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
 					m.Line = line
 				}
 
