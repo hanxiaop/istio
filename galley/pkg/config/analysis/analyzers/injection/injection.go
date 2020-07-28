@@ -76,8 +76,7 @@ func (a *Analyzer) Analyze(c analysis.Context) {
 
 			m := msg.NewNamespaceNotInjected(r, r.Metadata.FullName.String(), r.Metadata.FullName.String())
 
-			pathKeyForLine := fmt.Sprintf(util.MetadataName)
-			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
+			if line, ok := util.ErrorLine(r, fmt.Sprintf(util.MetadataName)); ok {
 				m.Line = line
 			}
 
@@ -92,8 +91,7 @@ func (a *Analyzer) Analyze(c analysis.Context) {
 					r.Metadata.FullName.String(),
 					r.Metadata.FullName.String())
 
-				pathKeyForLine := fmt.Sprintf(util.MetadataName)
-				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
+				if line, ok := util.ErrorLine(r, fmt.Sprintf(util.MetadataName)); ok {
 					m.Line = line
 				}
 
