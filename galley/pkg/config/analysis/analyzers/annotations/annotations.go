@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"strings"
 
-	"istio.io/istio/galley/pkg/config/analysis/analyzers/util"
-
 	"istio.io/api/annotation"
 
 	"istio.io/istio/galley/pkg/config/analysis"
+	"istio.io/istio/galley/pkg/config/analysis/analyzers/util"
 	"istio.io/istio/galley/pkg/config/analysis/msg"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/collection"
@@ -87,8 +86,7 @@ outer:
 		if annotationDef == nil {
 			m := msg.NewUnknownAnnotation(r, ann)
 
-			pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
-			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
+			if line, ok := util.ErrorLine(r, fmt.Sprintf(util.Annotation, ann)); ok {
 				m.Line = line
 			}
 
@@ -107,8 +105,7 @@ outer:
 		if !contains(attachesTo, kind) {
 			m := msg.NewMisplacedAnnotation(r, ann, strings.Join(attachesTo, ", "))
 
-			pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
-			if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
+			if line, ok := util.ErrorLine(r, fmt.Sprintf(util.Annotation, ann)); ok {
 				m.Line = line
 			}
 
@@ -123,8 +120,7 @@ outer:
 			if err := validationFunction(value); err != nil {
 				m := msg.NewInvalidAnnotation(r, ann, err.Error())
 
-				pathKeyForLine := fmt.Sprintf(util.Annotation, ann)
-				if line, ok := util.ErrorLine(r, pathKeyForLine); ok {
+				if line, ok := util.ErrorLine(r, fmt.Sprintf(util.Annotation, ann)); ok {
 					m.Line = line
 				}
 
