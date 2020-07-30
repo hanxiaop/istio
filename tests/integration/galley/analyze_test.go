@@ -328,6 +328,13 @@ func TestTimeout(t *testing.T) {
 		})
 }
 
+func TestErrorLine(t *testing.T) {
+	framework.
+		NewTest(t).
+		Run(func(ctx framework.TestContext) {
+	})
+}
+
 // Verify the output contains messages of the expected type, in order, followed by boilerplate lines
 func expectMessages(t *testing.T, g *GomegaWithT, outputLines []string, expected ...*diag.MessageType) {
 	t.Helper()
