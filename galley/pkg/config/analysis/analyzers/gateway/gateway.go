@@ -99,6 +99,7 @@ func (*IngressGatewayPortAnalyzer) analyzeGateway(r *resource.Instance, c analys
 
 	// Report if we found no pods matching this gateway's selector
 	if gwSelectorMatches == 0 {
+
 		m := msg.NewReferencedResourceNotFound(r, "selector", gwSelector.String())
 
 		label := util.ExtractLabelFromSelectorString(gwSelector.String())
@@ -115,6 +116,7 @@ func (*IngressGatewayPortAnalyzer) analyzeGateway(r *resource.Instance, c analys
 		if server.Port != nil {
 			_, ok := servicePorts[server.Port.Number]
 			if !ok {
+
 				m := msg.NewGatewayPortNotOnWorkload(r, gwSelector.String(), int(server.Port.Number))
 
 				label := util.ExtractLabelFromSelectorString(gwSelector.String())
