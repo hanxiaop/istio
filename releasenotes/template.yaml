@@ -22,7 +22,7 @@ kind:
 # - documentation
 area:
 
-# issue is a list of GitHub issues resolved in this note.
+# issue is a (potentially comma separated list) of GitHub issues resolved in this note.
 issue: 
 
 # releaseNotes is a markdown listing of any user facing changes. This will appear in the
@@ -32,8 +32,6 @@ releaseNotes:
 # upgradeNotes is a markdown listing of any changes that will affect the upgrade
 # process. This will appear in the release notes. 
 upgradeNotes:
-  title:
-  content:
 
 # securityNotes is a markdown listing of any changes related to the security of
 # Istio.
