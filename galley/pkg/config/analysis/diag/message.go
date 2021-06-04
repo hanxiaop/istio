@@ -49,7 +49,7 @@ func (m *MessageType) Template() string { return m.template }
 // Message is a specific diagnostic message
 // TODO: Implement using Analysis message API
 type Message struct {
-	Type *MessageType
+	Schema *v1alpha1.AnalysisMessageWeakSchema
 
 	// The Parameters to the message
 	Parameters []interface{}
@@ -69,8 +69,8 @@ type Message struct {
 func (m *Message) Unstructured(includeOrigin bool) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	result["code"] = m.Type.Code()
-	result["level"] = m.Type.Level().String()
+	result["code"] = m.Schema.MessageBase.Type.GetCode()
+	result["level"] = m.Schema.MessageBase.Level.String()
 	if includeOrigin && m.Resource != nil {
 		result["origin"] = m.Resource.Origin.FriendlyName()
 		if m.Resource.Origin.Reference() != nil {
@@ -81,13 +81,13 @@ func (m *Message) Unstructured(includeOrigin bool) map[string]interface{} {
 			result["reference"] = loc
 		}
 	}
-	result["message"] = fmt.Sprintf(m.Type.Template(), m.Parameters...)
+	result["message"] = fmt.Sprintf(m.Schema.Template, m.Parameters...)
 
 	docQueryString := ""
 	if m.DocRef != "" {
 		docQueryString = fmt.Sprintf("?ref=%s", m.DocRef)
 	}
-	result["documentationUrl"] = fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Type.Code()), docQueryString)
+	result["documentationUrl"] = fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Schema.MessageBase.Type.GetCode()), docQueryString)
 
 	return result
 }
@@ -99,13 +99,14 @@ func (m *Message) UnstructuredAnalysisMessageBase() map[string]interface{} {
 	if m.DocRef != "" {
 		docQueryString = fmt.Sprintf("?ref=%s", m.DocRef)
 	}
-	docURL := fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Type.Code()), docQueryString)
+	docURL := fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Schema.MessageBase.Type.GetCode()), docQueryString)
 
 	mb := v1alpha1.AnalysisMessageBase{
 		DocumentationUrl: docURL,
-		Level:            v1alpha1.AnalysisMessageBase_Level(v1alpha1.AnalysisMessageBase_Level_value[strings.ToUpper(m.Type.Level().String())]),
+		Level:            v1alpha1.AnalysisMessageBase_Level(v1alpha1.AnalysisMessageBase_Level_value[strings.
+			ToUpper(m.Schema.MessageBase.Level.String())]),
 		Type: &v1alpha1.AnalysisMessageBase_Type{
-			Code: m.Type.Code(),
+			Code: m.Schema.MessageBase.Type.GetCode(),
 		},
 	}
 
@@ -139,8 +140,8 @@ func (m *Message) Origin() string {
 // String implements io.Stringer
 func (m *Message) String() string {
 	return fmt.Sprintf("%v [%v]%s %s",
-		m.Type.Level(), m.Type.Code(), m.Origin(),
-		fmt.Sprintf(m.Type.Template(), m.Parameters...))
+		m.Schema.MessageBase.Level.String(), m.Schema.MessageBase.Type.GetCode(), m.Origin(),
+		fmt.Sprintf(m.Schema.Template, m.Parameters...))
 }
 
 // MarshalJSON satisfies the Marshaler interface
@@ -148,19 +149,26 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.Unstructured(true))
 }
 
-// NewMessageType returns a new MessageType instance.
-func NewMessageType(level Level, code, template string) *MessageType {
-	return &MessageType{
-		level:    level,
-		code:     code,
-		template: template,
+// NewMessageType returns a new NewMessageSchema instance.
+func NewMessageSchema (level Level, name, code, template, description string, args ) *v1alpha1.AnalysisMessageWeakSchema {
+	return &v1alpha1.AnalysisMessageWeakSchema{
+		MessageBase:          &v1alpha1.AnalysisMessageBase{
+			Type:                 &v1alpha1.AnalysisMessageBase_Type{
+				Name:                 name,
+				Code:                 code,
+			},
+			Level:                v1alpha1.AnalysisMessageBase_Level(level.sortOrder),
+		},
+		Description:          description,
+		Template:             template,
+		Args:
 	}
 }
 
 // NewMessage returns a new Message instance from an existing type.
-func NewMessage(mt *MessageType, r *resource.Instance, p ...interface{}) Message {
+func NewMessage(schema *v1alpha1.AnalysisMessageWeakSchema, r *resource.Instance, p ...interface{}) Message {
 	return Message{
-		Type:       mt,
+		Schema:     schema,
 		Resource:   r,
 		Parameters: p,
 	}
