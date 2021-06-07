@@ -26,28 +26,43 @@ func TestMessages_Sort(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Error, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Warning, "A1", "Template: %q"),
+		NewMessageBase(Warning, "", "A1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	thirdMsg := NewMessage(
-		NewMessageType(Warning, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("A"),
+		nil,
 		"B",
 	)
 	fourthMsg := NewMessage(
-		NewMessageType(Warning, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"A",
 	)
 	fifthMsg := NewMessage(
-		NewMessageType(Warning, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 
@@ -63,18 +78,27 @@ func TestMessages_SortWithNilOrigin(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
+		nil,
 		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
+		nil,
 		nil,
 		"C",
 	)
 	thirdMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 
@@ -90,13 +114,19 @@ func TestMessages_SortedCopy(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Warning, "A1", "Template: %q"),
+		NewMessageBase(Warning, "", "A1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	// Oops, we have a duplicate (identical to firstMsg) - it should be removed.

@@ -121,21 +121,22 @@ var tmpl = `
 package msg
 
 import (
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis/diag"
 	"istio.io/istio/pkg/config/resource"
 )
 
 var (
 	{{- range .Messages}}
-	// {{.Name}} defines a diag.MessageType for message "{{.Name}}".
+	// {{.Name}} defines a NewMessageBase for message "{{.Name}}".
 	// Description: {{.Description}}
-	{{.Name}} = diag.NewMessageType(diag.{{.Level}}, "{{.Code}}", "{{.Template}}")
+	{{.Name}} = diag.NewMessageBase(diag.{{.Level}},"{{.Name}}", "{{.Code}}", "{{.Url}}")
 	{{end}}
 )
 
 // All returns a list of all known message types.
-func All() []*diag.MessageType {
-	return []*diag.MessageType{
+func All() []*v1alpha1.AnalysisMessageBase {
+	return []*v1alpha1.AnalysisMessageBase {
 		{{- range .Messages}}
 			{{.Name}},
 		{{- end}}
@@ -147,9 +148,19 @@ func All() []*diag.MessageType {
 func New{{.Name}}(r *resource.Instance{{range .Args}}, {{.Name}} {{.Type}}{{end}}) diag.Message {
 	return diag.NewMessage(
 		{{.Name}},
+        "{{.Description}}",
+		"{{.Template}}",
 		r,
+		[]*v1alpha1.AnalysisMessageWeakSchema_ArgType {
+			{{- range .Args}}
+			{
+				Name: "{{.Name}}",
+				GoType: "{{.Type}}",
+			},
+			{{- end}}
+		},
 		{{- range .Args}}
-			{{.Name}},
+		{{.Name}},
 		{{- end}}
 	)
 }
@@ -176,6 +187,7 @@ type message struct {
 	Level       string `json:"level"`
 	Description string `json:"description"`
 	Template    string `json:"template"`
+	Url         string `json:"url"`
 	Args        []arg  `json:"args"`
 }
 

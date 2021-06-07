@@ -25,27 +25,6 @@ import (
 	"istio.io/istio/pkg/url"
 )
 
-// MessageType is a type of diagnostic message
-type MessageType struct {
-	// The level of the message.
-	level Level
-
-	// The error code of the message
-	code string
-
-	// TODO: Make this localizable
-	template string
-}
-
-// Level returns the level of the MessageType
-func (m *MessageType) Level() Level { return m.level }
-
-// Code returns the code of the MessageType
-func (m *MessageType) Code() string { return m.code }
-
-// Template returns the message template used by the MessageType
-func (m *MessageType) Template() string { return m.template }
-
 // Message is a specific diagnostic message
 // TODO: Implement using Analysis message API
 type Message struct {
@@ -57,9 +36,6 @@ type Message struct {
 	// Resource is the underlying resource instance associated with the
 	// message, or nil if no resource is associated with it.
 	Resource *resource.Instance
-
-	// DocRef is an optional reference tracker for the documentation URL
-	DocRef string
 
 	// Line is the line number of the error place in the message
 	Line int
@@ -81,44 +57,15 @@ func (m *Message) Unstructured(includeOrigin bool) map[string]interface{} {
 			result["reference"] = loc
 		}
 	}
-	result["message"] = fmt.Sprintf(m.Schema.Template, m.Parameters...)
+	result["message"] = fmt.Sprintf(m.Schema.Template, m.Schema.Args)
 
 	docQueryString := ""
-	if m.DocRef != "" {
-		docQueryString = fmt.Sprintf("?ref=%s", m.DocRef)
+	if m.Schema.MessageBase.DocumentationUrl != "" {
+		docQueryString = fmt.Sprintf("?ref=%s", m.Schema.MessageBase.DocumentationUrl)
 	}
 	result["documentationUrl"] = fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Schema.MessageBase.Type.GetCode()), docQueryString)
 
 	return result
-}
-
-// UnstructuredAnalysisMessageBase returns this message as a JSON-style unstructured map in AnalaysisMessageBase
-// TODO(jasonwzm): Remove once message implements AnalysisMessageBase
-func (m *Message) UnstructuredAnalysisMessageBase() map[string]interface{} {
-	docQueryString := ""
-	if m.DocRef != "" {
-		docQueryString = fmt.Sprintf("?ref=%s", m.DocRef)
-	}
-	docURL := fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, strings.ToLower(m.Schema.MessageBase.Type.GetCode()), docQueryString)
-
-	mb := v1alpha1.AnalysisMessageBase{
-		DocumentationUrl: docURL,
-		Level:            v1alpha1.AnalysisMessageBase_Level(v1alpha1.AnalysisMessageBase_Level_value[strings.
-			ToUpper(m.Schema.MessageBase.Level.String())]),
-		Type: &v1alpha1.AnalysisMessageBase_Type{
-			Code: m.Schema.MessageBase.Type.GetCode(),
-		},
-	}
-
-	var r map[string]interface{}
-
-	j, err := json.Marshal(mb)
-	if err != nil {
-		return r
-	}
-	json.Unmarshal(j, &r) // nolint: errcheck
-
-	return r
 }
 
 // Origin returns the origin of the message
@@ -141,7 +88,7 @@ func (m *Message) Origin() string {
 func (m *Message) String() string {
 	return fmt.Sprintf("%v [%v]%s %s",
 		m.Schema.MessageBase.Level.String(), m.Schema.MessageBase.Type.GetCode(), m.Origin(),
-		fmt.Sprintf(m.Schema.Template, m.Parameters...))
+		fmt.Sprintf(m.Schema.Template, m.Schema.Args))
 }
 
 // MarshalJSON satisfies the Marshaler interface
@@ -149,27 +96,29 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.Unstructured(true))
 }
 
-// NewMessageType returns a new NewMessageSchema instance.
-func NewMessageSchema (level Level, name, code, template, description string, args ) *v1alpha1.AnalysisMessageWeakSchema {
-	return &v1alpha1.AnalysisMessageWeakSchema{
-		MessageBase:          &v1alpha1.AnalysisMessageBase{
+// NewMessageBase returns a new NewMessageBase instance.
+func NewMessageBase (level v1alpha1.AnalysisMessageBase_Level, name, code, docUrl string) *v1alpha1.AnalysisMessageBase {
+	return &v1alpha1.AnalysisMessageBase{
 			Type:                 &v1alpha1.AnalysisMessageBase_Type{
 				Name:                 name,
 				Code:                 code,
 			},
-			Level:                v1alpha1.AnalysisMessageBase_Level(level.sortOrder),
-		},
-		Description:          description,
-		Template:             template,
-		Args:
-	}
+			Level:                level,
+			DocumentationUrl: docUrl,
+		}
 }
 
 // NewMessage returns a new Message instance from an existing type.
-func NewMessage(schema *v1alpha1.AnalysisMessageWeakSchema, r *resource.Instance, p ...interface{}) Message {
+func NewMessage(messageBase *v1alpha1.AnalysisMessageBase, description, template string,
+	r *resource.Instance, args []*v1alpha1.AnalysisMessageWeakSchema_ArgType, p ...interface{}) Message {
 	return Message{
-		Schema:     schema,
-		Resource:   r,
+		Schema: &v1alpha1.AnalysisMessageWeakSchema{
+			MessageBase:          messageBase,
+			Description:          description,
+			Template:             template,
+			Args:                 args,
+		},
+		Resource: r,
 		Parameters: p,
 	}
 }

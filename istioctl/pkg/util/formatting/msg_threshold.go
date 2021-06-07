@@ -18,18 +18,22 @@ import (
 	"errors"
 	"strings"
 
+
+	"istio.io/istio/galley/pkg/config/analysis/diag"
+
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis/diag"
 )
 
 // MessageThreshold is a wrapper around Level to be used as a cobra command line argument.
 // It should satisfy the pflag.Value interface.
 type MessageThreshold struct {
-	diag.Level
+	v1alpha1.AnalysisMessageBase_Level
 }
 
 // String is a function declared in the pflag.Value interface
 func (m *MessageThreshold) String() string {
-	return m.Level.String()
+	return m.String()
 }
 
 // Type is a function declared in the pflag.Value interface
@@ -44,6 +48,6 @@ func (m *MessageThreshold) Set(s string) error {
 	if !ok {
 		return errors.New("invalid level option")
 	}
-	m.Level = level
+	m.AnalysisMessageBase_Level = level
 	return nil
 }

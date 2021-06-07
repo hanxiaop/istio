@@ -24,11 +24,16 @@ import (
 	"strings"
 	"time"
 
+	"istio.io/api/analysis/v1alpha1"
+
+	"istio.io/api/analysis/v1alpha1"
+
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis"
 	"istio.io/istio/galley/pkg/config/analysis/analyzers"
 	"istio.io/istio/galley/pkg/config/analysis/diag"
@@ -66,8 +71,8 @@ func (f FileParseError) Error() string {
 var (
 	listAnalyzers     bool
 	useKube           bool
-	failureThreshold  = formatting.MessageThreshold{diag.Error} // messages at least this level will generate an error exit code
-	outputThreshold   = formatting.MessageThreshold{diag.Info}  // messages at least this level will be included in the output
+	failureThreshold  = formatting.MessageThreshold{v1alpha1.AnalysisMessageBase_ERROR} // messages at least this level will generate an error exit code
+	outputThreshold   = formatting.MessageThreshold{v1alpha1.AnalysisMessageBase_INFO}  // messages at least this level will be included in the output
 	colorize          bool
 	msgOutputFormat   string
 	meshCfgFile       string
@@ -239,7 +244,7 @@ func Analyze() *cobra.Command {
 			}
 
 			// Get messages for output
-			outputMessages := result.Messages.SetDocRef("istioctl-analyze").FilterOutLowerThan(outputThreshold.Level)
+			outputMessages := result.Messages.SetDocRef("istioctl-analyze").FilterOutLowerThan(outputThreshold.AnalysisMessageBase_Level)
 
 			// Print all the messages to stdout in the specified format
 			output, err := formatting.Print(outputMessages, msgOutputFormat, colorize)

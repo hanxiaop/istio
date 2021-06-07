@@ -15,7 +15,9 @@
 package diag
 
 import (
+	"istio.io/api/analysis/v1alpha1"
 	"sort"
+
 )
 
 // Messages is a slice of Message items.
@@ -31,10 +33,10 @@ func (ms *Messages) Sort() {
 	sort.Slice(*ms, func(i, j int) bool {
 		a, b := (*ms)[i], (*ms)[j]
 		switch {
-		case a.Type.Level() != b.Type.Level():
-			return a.Type.Level().sortOrder < b.Type.Level().sortOrder
-		case a.Type.Code() != b.Type.Code():
-			return a.Type.Code() < b.Type.Code()
+		case a.Schema.MessageBase.GetLevel() !=b.Schema.MessageBase.GetLevel():
+			return a.Schema.MessageBase.GetLevel() < b.Schema.MessageBase.GetLevel()
+		case a.Schema.MessageBase.GetType().GetCode() != b.Schema.MessageBase.GetType().GetCode():
+			return a.Schema.MessageBase.GetType().GetCode() < b.Schema.MessageBase.GetType().GetCode()
 		case a.Resource == nil && b.Resource != nil:
 			return true
 		case a.Resource != nil && b.Resource == nil:
@@ -68,16 +70,16 @@ func (ms *Messages) SortedDedupedCopy() Messages {
 // SetDocRef sets the doc URL reference tracker for the messages
 func (ms *Messages) SetDocRef(docRef string) *Messages {
 	for i := range *ms {
-		(*ms)[i].DocRef = docRef
+		(*ms)[i].Schema.MessageBase.DocumentationUrl = docRef
 	}
 	return ms
 }
 
 // FilterOutLowerThan only keeps messages at or above the specified output level
-func (ms *Messages) FilterOutLowerThan(outputLevel Level) Messages {
+func (ms *Messages) FilterOutLowerThan(outputLevel v1alpha1.AnalysisMessageBase_Level) Messages {
 	outputMessages := Messages{}
 	for _, m := range *ms {
-		if m.Type.Level().IsWorseThanOrEqualTo(outputLevel) {
+		if m.Schema.MessageBase.Level <= outputLevel {
 			outputMessages = append(outputMessages, m)
 		}
 	}

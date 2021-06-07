@@ -29,9 +29,9 @@ func toStatusValue(msgs diag.Messages) interface{} {
 
 	result := make([]interface{}, 0, len(msgs))
 	for _, m := range msgs {
-		m.DocRef = DocRef
+		m.Schema.MessageBase.DocumentationUrl = DocRef
 
-		result = append(result, m.UnstructuredAnalysisMessageBase())
+		result = append(result, m.Unstructured(false))
 	}
 
 	return result

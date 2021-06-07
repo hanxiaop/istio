@@ -16,7 +16,6 @@ package diag
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -27,29 +26,32 @@ import (
 
 func TestMessage_String(t *testing.T) {
 	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
-	m := NewMessage(mt, nil, "Feta")
+	mt := NewMessageBase(Error, "CheeseNotFoundError", "IST-0042", "")
+	m := NewMessage(mt, "Cheese type is not found", "Cheese type not found: %q", nil, nil, "Feta")
 
 	g.Expect(m.String()).To(Equal(`Error [IST-0042] Cheese type not found: "Feta"`))
 }
 
 func TestMessageWithResource_String(t *testing.T) {
 	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
-	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
+	mt := NewMessageBase(Error, "NotFoundError", "IST-0042", "")
+	m := NewMessage(mt, "", "Cheese type not found: %q",
+		&resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}},
+		nil, "Feta")
 
 	g.Expect(m.String()).To(Equal(`Error [IST-0042] (toppings/cheese path/to/file) Cheese type not found: "Feta"`))
 }
 
 func TestMessage_Unstructured(t *testing.T) {
 	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST-0042", "Cheese type not found: %q")
-	m := NewMessage(mt, nil, "Feta")
+	mt := NewMessageBase(Error, "NotFoundError", "IST-0042", "")
+	m := NewMessage(mt, "", "Cheese type not found: %q", nil, nil, "Feta")
 
 	g.Expect(m.Unstructured(true)).To(Not(HaveKey("origin")))
 	g.Expect(m.Unstructured(false)).To(Not(HaveKey("origin")))
 
-	m = NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese"}}, "Feta")
+	m = NewMessage(mt, "", "Cheese type not found: %q",
+		 &resource.Instance{Origin: testOrigin{name: "toppings/cheese"}}, nil, "Feta")
 
 	g.Expect(m.Unstructured(true)).To((HaveKey("origin")))
 	g.Expect(m.Unstructured(false)).To(Not(HaveKey("origin")))
@@ -57,16 +59,18 @@ func TestMessage_Unstructured(t *testing.T) {
 
 func TestMessageWithDocRef(t *testing.T) {
 	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST0042", "Cheese type not found: %q")
-	m := NewMessage(mt, nil, "Feta")
-	m.DocRef = "test-ref"
+	mt := NewMessageBase(Error, "NotFoundError", "IST-0042", "")
+	m := NewMessage(mt, "", "Cheese type not found: %q", nil, nil, "Feta")
+	m.Schema.MessageBase.DocumentationUrl = "test-ref"
 	g.Expect(m.Unstructured(false)["documentationUrl"]).To(Equal(url.ConfigAnalysis + "/ist0042/?ref=test-ref"))
 }
 
 func TestMessage_JSON(t *testing.T) {
 	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST0042", "Cheese type not found: %q")
-	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
+	mt := NewMessageBase(Error, "NotFoundError", "IST-0042", "")
+	m := NewMessage(mt, "",  "Cheese type not found: %q",
+		&resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}},
+		nil, "Feta")
 
 	j, _ := json.Marshal(&m)
 	g.Expect(string(j)).To(Equal(`{"code":"IST0042","documentationUrl":"` + url.ConfigAnalysis + `/ist0042/"` +
@@ -82,20 +86,4 @@ func TestMessage_ReplaceLine(t *testing.T) {
 		result = append(result, m.ReplaceLine(v))
 	}
 	g.Expect(result).To(Equal([]string{"test.yaml", "test.yaml:321", "test.yaml:321", "test.yaml:321", "test", "test:321", "123:321", "123"}))
-}
-
-func TestMessage_UnstructuredAnalysisMessageBase(t *testing.T) {
-	g := NewWithT(t)
-	mt := NewMessageType(Error, "IST0042", "Cheese type not found: %q")
-	m := NewMessage(mt, &resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}}, "Feta")
-	m.DocRef = "test-ref"
-
-	mb := m.UnstructuredAnalysisMessageBase()
-	g.Expect(mb["documentation_url"]).To(Equal(fmt.Sprintf("%s/%s/%s", url.ConfigAnalysis, "ist0042", "?ref=test-ref")))
-	g.Expect(mb["level"]).To(Equal(3.))
-	g.Expect(mb["type"]).To(Equal(
-		map[string]interface{}{
-			"code": "IST0042",
-		},
-	))
 }

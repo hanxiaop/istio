@@ -16,6 +16,8 @@ package diag
 
 import (
 	"strings"
+
+	"istio.io/api/analysis/v1alpha1"
 )
 
 // Level is the severity level of a message.
@@ -34,18 +36,21 @@ func (l Level) IsWorseThanOrEqualTo(target Level) bool {
 
 var (
 	// Info level is for informational messages
-	Info = Level{2, "Info"}
+	Info = v1alpha1.AnalysisMessageBase_INFO
 
 	// Warning level is for warning messages
-	Warning = Level{1, "Warning"}
+	Warning = v1alpha1.AnalysisMessageBase_WARNING
 
 	// Error level is for error messages
-	Error = Level{0, "Error"}
+	Error = v1alpha1.AnalysisMessageBase_ERROR
+
+	// Unknown level is for unkown messages
+	Unknown = v1alpha1.AnalysisMessageBase_UNKNOWN
 )
 
 // GetAllLevels returns an arbitrarily ordered slice of all Levels defined.
-func GetAllLevels() []Level {
-	return []Level{Info, Warning, Error}
+func GetAllLevels() []v1alpha1.AnalysisMessageBase_Level {
+	return []v1alpha1.AnalysisMessageBase_Level{Info, Warning, Error, Unknown}
 }
 
 // GetAllLevelStrings returns a list of strings representing the names of all Levels defined. The order is arbitrary but
@@ -54,17 +59,17 @@ func GetAllLevelStrings() []string {
 	levels := GetAllLevels()
 	var s []string
 	for _, l := range levels {
-		s = append(s, l.name)
+		s = append(s, l.String())
 	}
 	return s
 }
 
 // GetUppercaseStringToLevelMap returns a mapping of uppercase strings to Level structs. This function is intended to be
 // used to convert user input to structs.
-func GetUppercaseStringToLevelMap() map[string]Level {
-	m := make(map[string]Level)
+func GetUppercaseStringToLevelMap() map[string]v1alpha1.AnalysisMessageBase_Level {
+	m := make(map[string]v1alpha1.AnalysisMessageBase_Level)
 	for _, l := range GetAllLevels() {
-		m[strings.ToUpper(l.name)] = l
+		m[strings.ToUpper(l.String())] = l
 	}
 	return m
 }
