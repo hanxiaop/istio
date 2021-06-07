@@ -90,7 +90,7 @@ func preCheck() *cobra.Command {
 				fmt.Fprintln(cmd.OutOrStdout(), output)
 			}
 			for _, m := range msgs {
-				if m.Type.Level().IsWorseThanOrEqualTo(diag.Warning) {
+				if m.Schema.MessageBase.GetLevel() <= diag.Warning {
 					e := fmt.Sprintf(`Issues found when checking the cluster. Istio may not be safe to install or upgrade.
 See %s for more information about causes and resolutions.`, url.ConfigAnalysis)
 					return errors.New(e)

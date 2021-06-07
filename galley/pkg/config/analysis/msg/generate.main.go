@@ -160,7 +160,7 @@ func New{{.Name}}(r *resource.Instance{{range .Args}}, {{.Name}} {{.Type}}{{end}
 			{{- end}}
 		},
 		{{- range .Args}}
-		{{.Name}},
+			{{.Name}},
 		{{- end}}
 	)
 }

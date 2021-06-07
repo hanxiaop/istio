@@ -131,8 +131,11 @@ func TestMessages_SortedCopy(t *testing.T) {
 	)
 	// Oops, we have a duplicate (identical to firstMsg) - it should be removed.
 	thirdMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 
@@ -148,13 +151,19 @@ func TestMessages_SetRefDoc(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Info, "C1", "Template: %q"),
+		NewMessageBase(Warning, "", "C1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 
@@ -173,18 +182,27 @@ func TestMessages_Filter(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Error, "B1", "Template: %q"),
+		NewMessageBase(Warning, "", "B1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Info, "A1", "Template: %q"),
+		NewMessageBase(Warning, "", "A1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	thirdMsg := NewMessage(
-		NewMessageType(Warning, "C1", "Template: %q"),
+		NewMessageBase(Warning, "", "C1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 
@@ -199,13 +217,19 @@ func TestMessages_FilterOutAll(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := NewMessage(
-		NewMessageType(Info, "A1", "Template: %q"),
+		NewMessageBase(Warning, "", "A1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 	secondMsg := NewMessage(
-		NewMessageType(Warning, "C1", "Template: %q"),
+		NewMessageBase(Warning, "", "C1", ""),
+		"",
+		"Template: %q",
 		MockResource("B"),
+		nil,
 		"B",
 	)
 

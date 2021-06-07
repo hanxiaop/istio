@@ -20,21 +20,10 @@ import (
 	"istio.io/api/analysis/v1alpha1"
 )
 
-// Level is the severity level of a message.
-type Level struct {
-	sortOrder int
-	name      string
-}
-
-func (l Level) String() string {
-	return l.name
-}
-
-func (l Level) IsWorseThanOrEqualTo(target Level) bool {
-	return l.sortOrder <= target.sortOrder
-}
-
 var (
+	// Unknown level is for unknown messages
+	Unknown = v1alpha1.AnalysisMessageBase_UNKNOWN
+
 	// Info level is for informational messages
 	Info = v1alpha1.AnalysisMessageBase_INFO
 
@@ -43,9 +32,6 @@ var (
 
 	// Error level is for error messages
 	Error = v1alpha1.AnalysisMessageBase_ERROR
-
-	// Unknown level is for unkown messages
-	Unknown = v1alpha1.AnalysisMessageBase_UNKNOWN
 )
 
 // GetAllLevels returns an arbitrarily ordered slice of all Levels defined.

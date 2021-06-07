@@ -97,15 +97,15 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 }
 
 // NewMessageBase returns a new NewMessageBase instance.
-func NewMessageBase (level v1alpha1.AnalysisMessageBase_Level, name, code, docUrl string) *v1alpha1.AnalysisMessageBase {
+func NewMessageBase(level v1alpha1.AnalysisMessageBase_Level, name, code, url string) *v1alpha1.AnalysisMessageBase {
 	return &v1alpha1.AnalysisMessageBase{
-			Type:                 &v1alpha1.AnalysisMessageBase_Type{
-				Name:                 name,
-				Code:                 code,
-			},
-			Level:                level,
-			DocumentationUrl: docUrl,
-		}
+		Type: &v1alpha1.AnalysisMessageBase_Type{
+			Name: name,
+			Code: code,
+		},
+		Level:            level,
+		DocumentationUrl: url,
+	}
 }
 
 // NewMessage returns a new Message instance from an existing type.
@@ -113,12 +113,12 @@ func NewMessage(messageBase *v1alpha1.AnalysisMessageBase, description, template
 	r *resource.Instance, args []*v1alpha1.AnalysisMessageWeakSchema_ArgType, p ...interface{}) Message {
 	return Message{
 		Schema: &v1alpha1.AnalysisMessageWeakSchema{
-			MessageBase:          messageBase,
-			Description:          description,
-			Template:             template,
-			Args:                 args,
+			MessageBase: messageBase,
+			Description: description,
+			Template:    template,
+			Args:        args,
 		},
-		Resource: r,
+		Resource:   r,
 		Parameters: p,
 	}
 }

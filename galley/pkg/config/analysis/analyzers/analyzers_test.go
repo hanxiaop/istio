@@ -24,6 +24,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis"
 	"istio.io/istio/galley/pkg/config/analysis/analyzers/annotations"
 	"istio.io/istio/galley/pkg/config/analysis/analyzers/authz"
@@ -51,7 +52,7 @@ import (
 )
 
 type message struct {
-	messageType *diag.MessageType
+	messageBase *v1alpha1.AnalysisMessageBase
 	origin      string
 }
 
@@ -711,7 +712,7 @@ func extractFields(msgs diag.Messages) []message {
 	result := make([]message, 0)
 	for _, m := range msgs {
 		expMsg := message{
-			messageType: m.Type,
+			messageBase: m.Schema.MessageBase,
 		}
 		if m.Resource != nil {
 			expMsg.origin = m.Resource.Origin.FriendlyName()

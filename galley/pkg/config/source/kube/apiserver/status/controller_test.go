@@ -217,7 +217,7 @@ func TestBasicReconcilation_NewStatus(t *testing.T) {
 
 	actualStatusMap := u.Object["status"].(map[string]interface{})
 
-	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).UnstructuredAnalysisMessageBase()))
+	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).Unstructured(true)))
 }
 
 func TestBasicReconcilation_NewStatusOldNonMap(t *testing.T) {
@@ -256,7 +256,7 @@ func TestBasicReconcilation_NewStatusOldNonMap(t *testing.T) {
 	u := cl.Actions()[1].(k8stesting.UpdateActionImpl).Object.(*unstructured.Unstructured)
 
 	actualStatusMap := u.Object["status"].(map[string]interface{})
-	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).UnstructuredAnalysisMessageBase()))
+	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).Unstructured(true)))
 }
 
 func TestBasicReconcilation_UpdateError(t *testing.T) {
@@ -292,7 +292,7 @@ func TestBasicReconcilation_UpdateError(t *testing.T) {
 	u := cl.Actions()[1].(k8stesting.UpdateActionImpl).Object.(*unstructured.Unstructured)
 
 	actualStatusMap := u.Object["status"].(map[string]interface{})
-	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).UnstructuredAnalysisMessageBase()))
+	g.Expect(actualStatusMap[subfield]).To(ConsistOf(expectedMessage(m).Unstructured(true)))
 }
 
 func TestBasicReconcilation_GetError(t *testing.T) {
@@ -386,9 +386,9 @@ func setupClientWithReactors(retVal runtime.Object, updateErrVal error) (kube.In
 
 func expectedMessage(m diag.Message) *diag.Message {
 	return &diag.Message{
-		Type:       m.Type,
+		Schema:     m.Schema,
 		Parameters: m.Parameters,
 		Resource:   m.Resource,
-		DocRef:     DocRef,
+		Line:       m.Line,
 	}
 }

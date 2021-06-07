@@ -24,10 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"istio.io/api/analysis/v1alpha1"
-
-	"istio.io/api/analysis/v1alpha1"
-
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -167,7 +163,7 @@ func Analyze() *cobra.Command {
 				// warning but continue.
 				codeIsValid := false
 				for _, at := range msg.All() {
-					if at.Code() == parts[0] {
+					if at.GetType().GetCode() == parts[0] {
 						codeIsValid = true
 						break
 					}
@@ -406,7 +402,7 @@ func gatherFilesInDirectory(cmd *cobra.Command, dir string) ([]local.ReaderSourc
 func errorIfMessagesExceedThreshold(messages []diag.Message) error {
 	foundIssues := false
 	for _, m := range messages {
-		if m.Type.Level().IsWorseThanOrEqualTo(failureThreshold.Level) {
+		if m.Schema.MessageBase.GetLevel() <= failureThreshold.AnalysisMessageBase_Level {
 			foundIssues = true
 		}
 	}

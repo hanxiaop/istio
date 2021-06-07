@@ -18,9 +18,6 @@ import (
 	"errors"
 	"strings"
 
-
-	"istio.io/istio/galley/pkg/config/analysis/diag"
-
 	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis/diag"
 )
@@ -29,11 +26,6 @@ import (
 // It should satisfy the pflag.Value interface.
 type MessageThreshold struct {
 	v1alpha1.AnalysisMessageBase_Level
-}
-
-// String is a function declared in the pflag.Value interface
-func (m *MessageThreshold) String() string {
-	return m.String()
 }
 
 // Type is a function declared in the pflag.Value interface

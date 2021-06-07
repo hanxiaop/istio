@@ -110,7 +110,7 @@ func TestSchemaValidationWrapper(t *testing.T) {
 		}
 		a.Analyze(ctx)
 		g.Expect(ctx.Reports).To(HaveLen(1))
-		g.Expect(ctx.Reports[0].Type).To(Equal(msg.SchemaValidationError))
+		g.Expect(ctx.Reports[0].Schema.MessageBase.GetType()).To(Equal(msg.SchemaValidationError))
 	})
 
 	t.Run("MultiError", func(t *testing.T) {
@@ -125,8 +125,8 @@ func TestSchemaValidationWrapper(t *testing.T) {
 		}
 		a.Analyze(ctx)
 		g.Expect(ctx.Reports).To(HaveLen(2))
-		g.Expect(ctx.Reports[0].Type).To(Equal(msg.SchemaValidationError))
-		g.Expect(ctx.Reports[1].Type).To(Equal(msg.SchemaValidationError))
+		g.Expect(ctx.Reports[0].Schema.MessageBase.GetType()).To(Equal(msg.SchemaValidationError))
+		g.Expect(ctx.Reports[1].Schema.MessageBase.GetType()).To(Equal(msg.SchemaValidationError))
 	})
 }
 

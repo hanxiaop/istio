@@ -15,9 +15,9 @@
 package diag
 
 import (
-	"istio.io/api/analysis/v1alpha1"
 	"sort"
 
+	"istio.io/api/analysis/v1alpha1"
 )
 
 // Messages is a slice of Message items.
@@ -33,7 +33,7 @@ func (ms *Messages) Sort() {
 	sort.Slice(*ms, func(i, j int) bool {
 		a, b := (*ms)[i], (*ms)[j]
 		switch {
-		case a.Schema.MessageBase.GetLevel() !=b.Schema.MessageBase.GetLevel():
+		case a.Schema.MessageBase.GetLevel() != b.Schema.MessageBase.GetLevel():
 			return a.Schema.MessageBase.GetLevel() < b.Schema.MessageBase.GetLevel()
 		case a.Schema.MessageBase.GetType().GetCode() != b.Schema.MessageBase.GetType().GetCode():
 			return a.Schema.MessageBase.GetType().GetCode() < b.Schema.MessageBase.GetType().GetCode()

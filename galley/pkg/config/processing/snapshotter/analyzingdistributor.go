@@ -211,8 +211,9 @@ FilterMessages:
 		// Filter out any messages on resources with suppression annotations.
 		if m.Resource != nil && m.Resource.Metadata.Annotations[annotation.GalleyAnalyzeSuppress.Name] != "" {
 			for _, code := range strings.Split(m.Resource.Metadata.Annotations[annotation.GalleyAnalyzeSuppress.Name], ",") {
-				if code == "*" || m.Type.Code() == code {
-					scope.Analysis.Debugf("Suppressing code %s on resource %s due to resource annotation", m.Type.Code(), m.Resource.Origin.FriendlyName())
+				if code == "*" || m.Schema.MessageBase.GetType().GetCode() == code {
+					scope.Analysis.Debugf("Suppressing code %s on resource %s due to resource annotation",
+						m.Schema.MessageBase.GetType().GetCode(), m.Resource.Origin.FriendlyName())
 					continue FilterMessages
 				}
 			}
@@ -220,14 +221,15 @@ FilterMessages:
 
 		// Filter out any messages that match our suppressions.
 		for _, s := range suppressions {
-			if m.Resource == nil || s.Code != m.Type.Code() {
+			if m.Resource == nil || s.Code != m.Schema.MessageBase.GetType().GetCode() {
 				continue
 			}
 
 			if !glob.Glob(s.ResourceName, m.Resource.Origin.FriendlyName()) {
 				continue
 			}
-			scope.Analysis.Debugf("Suppressing code %s on resource %s due to suppressions list", m.Type.Code(), m.Resource.Origin.FriendlyName())
+			scope.Analysis.Debugf("Suppressing code %s on resource %s due to suppressions list",
+				m.Schema.MessageBase.GetType().GetCode(), m.Resource.Origin.FriendlyName())
 			continue FilterMessages
 		}
 

@@ -24,6 +24,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/mattn/go-isatty"
 
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis/diag"
 	"istio.io/pkg/env"
 )
@@ -81,7 +82,7 @@ func printYAML(ms diag.Messages) (string, error) {
 
 // Formatting options for Message
 var (
-	colorPrefixes = map[diag.Level]string{
+	colorPrefixes = map[v1alpha1.AnalysisMessageBase_Level]string{
 		diag.Info:    "",           // no special color for info messages
 		diag.Warning: "\033[33m",   // yellow
 		diag.Error:   "\033[1;31m", // bold red
@@ -91,8 +92,8 @@ var (
 // render turns a Message instance into a string with an option of colored bash output
 func render(m diag.Message, colorize bool) string {
 	return fmt.Sprintf("%s%v%s [%v]%s %s",
-		colorPrefix(m, colorize), m.Type.Level(), colorSuffix(colorize),
-		m.Type.Code(), m.Origin(), fmt.Sprintf(m.Type.Template(), m.Parameters...),
+		colorPrefix(m, colorize), m.Schema.MessageBase.GetLevel(), colorSuffix(colorize),
+		m.Schema.MessageBase.Type.GetCode(), m.Origin(), fmt.Sprintf(m.Schema.GetTemplate(), m.Parameters...),
 	)
 }
 
@@ -101,7 +102,7 @@ func colorPrefix(m diag.Message, colorize bool) string {
 		return ""
 	}
 
-	prefix, ok := colorPrefixes[m.Type.Level()]
+	prefix, ok := colorPrefixes[m.Schema.MessageBase.GetLevel()]
 	if !ok {
 		return ""
 	}

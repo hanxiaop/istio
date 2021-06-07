@@ -23,7 +23,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	"istio.io/istio/galley/pkg/config/analysis/diag"
+	"istio.io/api/analysis/v1alpha1"
 	"istio.io/istio/galley/pkg/config/analysis/msg"
 	"istio.io/istio/istioctl/cmd"
 	"istio.io/istio/pkg/test"
@@ -203,17 +203,17 @@ func TestJsonOutput(t *testing.T) {
 			testcases := []struct {
 				name     string
 				args     []string
-				messages []*diag.MessageType
+				messages []*v1alpha1.AnalysisMessageBase
 			}{
 				{
 					name:     "no other output except analysis json output",
 					args:     []string{jsonGatewayFile, jsonOutput},
-					messages: []*diag.MessageType{msg.ReferencedResourceNotFound},
+					messages: []*v1alpha1.AnalysisMessageBase{msg.ReferencedResourceNotFound},
 				},
 				{
 					name:     "invalid file does not output error in stdout",
 					args:     []string{invalidExtensionFile, jsonOutput},
-					messages: []*diag.MessageType{},
+					messages: []*v1alpha1.AnalysisMessageBase{},
 				},
 			}
 
@@ -305,24 +305,24 @@ func TestAllNamespaces(t *testing.T) {
 			foundCount := 0
 			for _, line := range output {
 				if strings.Contains(line, ns1.Name()) {
-					if strings.Contains(line, msg.ReferencedResourceNotFound.Code()) {
-						g.Expect(line).To(ContainSubstring(msg.ReferencedResourceNotFound.Code()))
+					if strings.Contains(line, msg.ReferencedResourceNotFound.GetType().GetCode()) {
+						g.Expect(line).To(ContainSubstring(msg.ReferencedResourceNotFound.GetType().GetCode()))
 						foundCount++
 					}
 					// There are 2 conflictings can be detected, A to B and B to A
-					if strings.Contains(line, msg.ConflictingGateways.Code()) {
-						g.Expect(line).To(ContainSubstring(msg.ConflictingGateways.Code()))
+					if strings.Contains(line, msg.ConflictingGateways.GetType().GetCode()) {
+						g.Expect(line).To(ContainSubstring(msg.ConflictingGateways.GetType().GetCode()))
 						foundCount++
 					}
 				}
 				if strings.Contains(line, ns2.Name()) {
-					if strings.Contains(line, msg.ReferencedResourceNotFound.Code()) {
-						g.Expect(line).To(ContainSubstring(msg.ReferencedResourceNotFound.Code()))
+					if strings.Contains(line, msg.ReferencedResourceNotFound.GetType().GetCode()) {
+						g.Expect(line).To(ContainSubstring(msg.ReferencedResourceNotFound.GetType().GetCode()))
 						foundCount++
 					}
 					// There are 2 conflictings can be detected, B to A and A to B
-					if strings.Contains(line, msg.ConflictingGateways.Code()) {
-						g.Expect(line).To(ContainSubstring(msg.ConflictingGateways.Code()))
+					if strings.Contains(line, msg.ConflictingGateways.GetType().GetCode()) {
+						g.Expect(line).To(ContainSubstring(msg.ConflictingGateways.GetType().GetCode()))
 						foundCount++
 					}
 				}
@@ -378,7 +378,7 @@ func TestErrorLine(t *testing.T) {
 }
 
 // Verify the output contains messages of the expected type, in order, followed by boilerplate lines
-func expectMessages(t test.Failer, g *GomegaWithT, outputLines []string, expected ...*diag.MessageType) {
+func expectMessages(t test.Failer, g *GomegaWithT, outputLines []string, expected ...*v1alpha1.AnalysisMessageBase) {
 	t.Helper()
 
 	// The boilerplate lines that appear if any issues are found
@@ -388,7 +388,7 @@ func expectMessages(t test.Failer, g *GomegaWithT, outputLines []string, expecte
 
 	for i, line := range outputLines {
 		if i < len(expected) {
-			g.Expect(line).To(ContainSubstring(expected[i].Code()))
+			g.Expect(line).To(ContainSubstring(expected[i].GetType().GetCode()))
 		} else {
 			g.Expect(line).To(ContainSubstring(boilerplateLines[i-len(expected)]))
 		}
@@ -401,7 +401,7 @@ func expectNoMessages(t test.Failer, g *GomegaWithT, output []string) {
 	g.Expect(output[0]).To(ContainSubstring("No validation issues found when analyzing"))
 }
 
-func expectJSONMessages(t test.Failer, g *GomegaWithT, output string, expected ...*diag.MessageType) {
+func expectJSONMessages(t test.Failer, g *GomegaWithT, output string, expected ...*v1alpha1.AnalysisMessageBase) {
 	t.Helper()
 
 	var j []map[string]interface{}
@@ -412,8 +412,8 @@ func expectJSONMessages(t test.Failer, g *GomegaWithT, output string, expected .
 	g.Expect(j).To(HaveLen(len(expected)))
 
 	for i, m := range j {
-		g.Expect(m["level"]).To(Equal(expected[i].Level().String()))
-		g.Expect(m["code"]).To(Equal(expected[i].Code()))
+		g.Expect(m["level"]).To(Equal(expected[i].GetLevel().String()))
+		g.Expect(m["code"]).To(Equal(expected[i].GetType().GetCode()))
 	}
 }
 

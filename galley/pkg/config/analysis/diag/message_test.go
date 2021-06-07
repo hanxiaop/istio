@@ -51,7 +51,7 @@ func TestMessage_Unstructured(t *testing.T) {
 	g.Expect(m.Unstructured(false)).To(Not(HaveKey("origin")))
 
 	m = NewMessage(mt, "", "Cheese type not found: %q",
-		 &resource.Instance{Origin: testOrigin{name: "toppings/cheese"}}, nil, "Feta")
+		&resource.Instance{Origin: testOrigin{name: "toppings/cheese"}}, nil, "Feta")
 
 	g.Expect(m.Unstructured(true)).To((HaveKey("origin")))
 	g.Expect(m.Unstructured(false)).To(Not(HaveKey("origin")))
@@ -68,7 +68,7 @@ func TestMessageWithDocRef(t *testing.T) {
 func TestMessage_JSON(t *testing.T) {
 	g := NewWithT(t)
 	mt := NewMessageBase(Error, "NotFoundError", "IST-0042", "")
-	m := NewMessage(mt, "",  "Cheese type not found: %q",
+	m := NewMessage(mt, "", "Cheese type not found: %q",
 		&resource.Instance{Origin: testOrigin{name: "toppings/cheese", ref: testReference{"path/to/file"}}},
 		nil, "Feta")
 

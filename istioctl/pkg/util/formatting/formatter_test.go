@@ -27,13 +27,19 @@ func TestFormatter_PrintLog(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Error, "B1", "Explosion accident: %v"),
+		diag.NewMessageBase(diag.Error, "", "B1", ""),
+		"",
+		"Explosion accident: %v",
 		diag.MockResource("SoapBubble"),
+		nil,
 		"the bubble is too big",
 	)
 	secondMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Warning, "C1", "Collapse danger: %v"),
+		diag.NewMessageBase(diag.Error, "", "C1", ""),
+		"",
+		"Collapse danger: %v",
 		diag.MockResource("GrandCastle"),
+		nil,
 		"the castle is too old",
 	)
 
@@ -50,13 +56,19 @@ func TestFormatter_PrintLogWithColor(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Error, "B1", "Explosion accident: %v"),
+		diag.NewMessageBase(diag.Error, "", "B1", ""),
+		"",
+		"Explosion accident: %v",
 		diag.MockResource("SoapBubble"),
+		nil,
 		"the bubble is too big",
 	)
 	secondMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Warning, "C1", "Collapse danger: %v"),
+		diag.NewMessageBase(diag.Error, "", "C1", ""),
+		"",
+		"Collapse danger: %v",
 		diag.MockResource("GrandCastle"),
+		nil,
 		"the castle is too old",
 	)
 
@@ -73,13 +85,19 @@ func TestFormatter_PrintJSON(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Error, "B1", "Explosion accident: %v"),
+		diag.NewMessageBase(diag.Error, "", "B1", ""),
+		"",
+		"Explosion accident: %v",
 		diag.MockResource("SoapBubble"),
+		nil,
 		"the bubble is too big",
 	)
 	secondMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Warning, "C1", "Collapse danger: %v"),
+		diag.NewMessageBase(diag.Error, "", "C1", ""),
+		"",
+		"Collapse danger: %v",
 		diag.MockResource("GrandCastle"),
+		nil,
 		"the castle is too old",
 	)
 
@@ -110,13 +128,19 @@ func TestFormatter_PrintYAML(t *testing.T) {
 	g := NewWithT(t)
 
 	firstMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Error, "B1", "Explosion accident: %v"),
+		diag.NewMessageBase(diag.Error, "", "B1", ""),
+		"",
+		"Explosion accident: %v",
 		diag.MockResource("SoapBubble"),
+		nil,
 		"the bubble is too big",
 	)
 	secondMsg := diag.NewMessage(
-		diag.NewMessageType(diag.Warning, "C1", "Collapse danger: %v"),
+		diag.NewMessageBase(diag.Error, "", "C1", ""),
+		"",
+		"Collapse danger: %v",
 		diag.MockResource("GrandCastle"),
+		nil,
 		"the castle is too old",
 	)
 

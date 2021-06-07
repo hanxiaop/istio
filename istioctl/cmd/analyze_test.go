@@ -27,14 +27,18 @@ func TestErrorOnIssuesFound(t *testing.T) {
 
 	msgs := []diag.Message{
 		diag.NewMessage(
-			diag.NewMessageType(diag.Error, "B1", "Template: %q"),
-			nil,
+			diag.NewMessageBase(diag.Warning, "", "B1", ""),
 			"",
+			"Template: %q",
+			nil,
+			nil,
 		),
 		diag.NewMessage(
-			diag.NewMessageType(diag.Warning, "A1", "Template: %q"),
-			nil,
+			diag.NewMessageBase(diag.Warning, "", "A1", ""),
 			"",
+			"Template: %q",
+			nil,
+			nil,
 		),
 	}
 
@@ -48,14 +52,18 @@ func TestNoErrorIfMessageLevelsBelowThreshold(t *testing.T) {
 
 	msgs := []diag.Message{
 		diag.NewMessage(
-			diag.NewMessageType(diag.Info, "B1", "Template: %q"),
-			nil,
+			diag.NewMessageBase(diag.Warning, "", "B1", ""),
 			"",
+			"Template: %q",
+			nil,
+			nil,
 		),
 		diag.NewMessage(
-			diag.NewMessageType(diag.Warning, "A1", "Template: %q"),
-			nil,
+			diag.NewMessageBase(diag.Warning, "", "A1", ""),
 			"",
+			"Template: %q",
+			nil,
+			nil,
 		),
 	}
 
