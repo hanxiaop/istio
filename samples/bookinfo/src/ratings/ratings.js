@@ -139,12 +139,12 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
           connection.end()
       })
     } else {
-      MongoClient.connect(url, function (err, db) {
+      MongoClient.connect(url, function (err, client) {
         if (err) {
           res.writeHead(500, {'Content-type': 'application/json'})
           res.end(JSON.stringify({error: 'could not connect to ratings database'}))
         } else {
-          db.collection('ratings').find({}).toArray(function (err, data) {
+          client.db.collection('ratings').find({}).toArray(function (err, data) {
             if (err) {
               res.writeHead(500, {'Content-type': 'application/json'})
               res.end(JSON.stringify({error: 'could not load ratings from database'}))
@@ -162,7 +162,7 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
               res.end(JSON.stringify(result))
             }
             // close DB once done:
-            db.close()
+            client.db.close()
           })
         }
       })
