@@ -310,6 +310,13 @@ var testGrid = []testCase{
 		},
 	},
 	{
+		name:       "serviceMultipleDeploymentsDifferentNamespaces",
+		inputFiles: []string{"testdata/deployment-service-with-diff-ns.yaml"},
+		analyzer:   &deployment.ServiceAssociationAnalyzer{},
+		expected: []message{
+		},
+	},
+	{
 		name: "regexes",
 		inputFiles: []string{
 			"testdata/virtualservice_regexes.yaml",
