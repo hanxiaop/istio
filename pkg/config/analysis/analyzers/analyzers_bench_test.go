@@ -19,6 +19,7 @@ package analyzers
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"istio.io/istio/pilot/pkg/config/memory"
 	"istio.io/istio/pkg/config"
@@ -106,7 +107,7 @@ func benchmarkAnalyzersArtificialBlankData(count int, b *testing.B) {
 
 		return false
 	})
-	ctx := local.NewContext(store, make(chan struct{}), func(name collection.Name) {})
+	ctx := local.NewContext(store, make(chan struct{}), func(name collection.Name) {}, 30*time.Second)
 
 	b.ResetTimer()
 	for _, a := range All() {

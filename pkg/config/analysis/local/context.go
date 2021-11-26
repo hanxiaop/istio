@@ -19,6 +19,7 @@ package local
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"istio.io/istio/pilot/pkg/config/file"
 	"istio.io/istio/pilot/pkg/model"
@@ -33,8 +34,9 @@ import (
 )
 
 // NewContext allows tests to use istiodContext without exporting it.  returned context is not threadsafe.
-func NewContext(store model.ConfigStore, cancelCh <-chan struct{}, collectionReporter CollectionReporterFn) analysis.Context {
-	return &istiodContext{
+func NewContext(store model.ConfigStore, cancelCh <-chan struct{}, collectionReporter CollectionReporterFn,
+	timeout time.Duration) *istiodContext {
+	ctx := &istiodContext{
 		store:              store,
 		cancelCh:           cancelCh,
 		messages:           diag.Messages{},
@@ -42,7 +44,16 @@ func NewContext(store model.ConfigStore, cancelCh <-chan struct{}, collectionRep
 		found:              map[key]*resource.Instance{},
 		foundCollections:   map[collection.Name]map[resource.FullName]*resource.Instance{},
 	}
+	go func() {
+		select {
+		case <-time.After(timeout):
+			ctx.timedOut = true
+		}
+	}()
+	return ctx
 }
+
+var _ analysis.Context = &istiodContext{}
 
 type istiodContext struct {
 	store              model.ConfigStore
@@ -51,6 +62,7 @@ type istiodContext struct {
 	collectionReporter CollectionReporterFn
 	found              map[key]*resource.Instance
 	foundCollections   map[collection.Name]map[resource.FullName]*resource.Instance
+	timedOut           bool
 }
 
 type key struct {
@@ -153,6 +165,9 @@ func (i *istiodContext) ForEach(col collection.Name, fn analysis.IteratorFn) {
 }
 
 func (i *istiodContext) Canceled() bool {
+	if i.timedOut {
+		return true
+	}
 	select {
 	case <-i.cancelCh:
 		return true
@@ -199,4 +214,8 @@ func cfgToInstance(cfg config.Config, col collection.Name, colschema collection.
 	// MCP is not aware of generation, add that here.
 	res.Metadata.Generation = cfg.Generation
 	return res, nil
+}
+
+func (i *istiodContext) TimedOut() bool {
+	return i.timedOut
 }
