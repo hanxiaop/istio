@@ -16,6 +16,7 @@ package inject
 
 import (
 	openshiftv1 "github.com/openshift/api/apps/v1"
+	"istio.io/istio/pilot/pkg/util/sets"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -25,12 +26,18 @@ import (
 	"istio.io/istio/pkg/config/constants"
 )
 
-var IgnoredNamespaces = []string{
+// Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#viewing-namespaces
+// "kube-system": The namespace for objects created by the Kubernetes system.
+// "kube-public": This namespace is mostly reserved for cluster usage.
+// "kube-node-lease": This namespace for the lease objects associated with each node
+//    which improves the performance of the node heartbeats as the cluster scales.
+// "local-path-storage": Dynamically provisioning persistent local storage with Kubernetes.
+//    used with Kind cluster: https://github.com/rancher/local-path-provisioner
+var IgnoredNamespaces = sets.NewSet(
 	constants.KubeSystemNamespace,
 	constants.KubePublicNamespace,
 	constants.KubeNodeLeaseNamespace,
-	constants.LocalPathStorageNamespace,
-}
+	constants.LocalPathStorageNamespace)
 
 var (
 	kinds = []struct {
