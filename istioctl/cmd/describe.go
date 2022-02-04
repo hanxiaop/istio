@@ -57,6 +57,7 @@ import (
 	"istio.io/istio/pkg/config"
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/config/host"
+	configkube "istio.io/istio/pkg/config/kube"
 	"istio.io/istio/pkg/config/mesh"
 	"istio.io/istio/pkg/config/protocol"
 	"istio.io/istio/pkg/kube"
@@ -501,13 +502,7 @@ func printService(writer io.Writer, svc v1.Service, pod *v1.Pod) {
 		// Get port number
 		nport, err := pilotcontroller.FindPort(pod, &port)
 		if err == nil {
-			var protocol string
-			if port.Name == "" {
-				protocol = "auto-detect"
-			} else {
-				protocol = string(servicePortProtocol(port.Name))
-			}
-
+			protocol := configkube.ConvertProtocol(int32(nport), port.Name, port.Protocol, port.AppProtocol)
 			fmt.Fprintf(writer, "   Port: %s %d/%s targets pod port %d\n", port.Name, port.Port, protocol, nport)
 		} else {
 			fmt.Fprintf(writer, "   %s\n", err.Error())
