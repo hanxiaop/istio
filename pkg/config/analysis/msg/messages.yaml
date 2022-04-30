@@ -556,3 +556,4 @@ messages:
     level: Warning
     description: "Proxy may prevent tcp named ports and unmatched traffic for ports serving TCP protocol from being forwarded correctly for ExternalName services."
     template: "Port name for ExternalName service is invalid. Proxy may prevent tcp named ports and unmatched traffic for ports serving TCP protocol from being forwarded correctly"
+    url: "https://istio.io/latest/docs/reference/config/analysis/ist0150/"
