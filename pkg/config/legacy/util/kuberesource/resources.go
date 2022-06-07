@@ -53,6 +53,19 @@ func SkipExcludedCollections(requiredCols collection.Names, excludedResourceKind
 	return resultBuilder.Build()
 }
 
+func RequiredCollections(enableServiceDiscovery bool) collection.Schemas {
+	resultBuilder := collection.NewSchemasBuilder()
+	if !enableServiceDiscovery {
+		return resultBuilder.Build()
+	}
+	for _, r := range collections.Kube.All() {
+		if IsRequiredForServiceDiscovery(r.Resource()) {
+			_ = resultBuilder.Add(r)
+		}
+	}
+	return resultBuilder.Build()
+}
+
 // DefaultExcludedResourceKinds returns the default list of resource kinds to exclude.
 func DefaultExcludedResourceKinds() []string {
 	resources := make([]string, 0)

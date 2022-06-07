@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"istio.io/api/annotation"
+	"istio.io/api/label"
 	"istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/pilot/pkg/config/aggregate"
 	"istio.io/istio/pilot/pkg/config/file"
@@ -76,6 +77,8 @@ type IstiodAnalyzer struct {
 	// Which kube resources are used by this analyzer
 	// Derived from metadata and the specified analyzer and transformer providers
 	kubeResources collection.Schemas
+	// Which resources are required for service discovery and used by this analyzer, will not be affected by revisions.
+	requiredResources collection.Schemas
 
 	// Hook function called when a collection is used in analysis
 	collectionReporter CollectionReporterFn
@@ -106,6 +109,7 @@ func NewIstiodAnalyzer(analyzer *analysis.CombinedAnalyzer, namespace,
 		analyzer.Metadata().Inputs,
 		kuberesource.DefaultExcludedResourceKinds(),
 		serviceDiscovery)
+	requiredResources := kuberesource.RequiredCollections(serviceDiscovery)
 
 	mcfg := mesh.DefaultMeshConfig()
 	sa := &IstiodAnalyzer{
@@ -116,6 +120,7 @@ func NewIstiodAnalyzer(analyzer *analysis.CombinedAnalyzer, namespace,
 		internalStore:      memory.Make(collection.SchemasFor(collections.IstioMeshV1Alpha1MeshNetworks, collections.IstioMeshV1Alpha1MeshConfig)),
 		istioNamespace:     istioNamespace,
 		kubeResources:      kubeResources,
+		requiredResources:  requiredResources,
 		collectionReporter: cr,
 	}
 
@@ -276,6 +281,17 @@ func (sa *IstiodAnalyzer) AddRunningKubeSourceWithRevision(c kubelib.Client, rev
 		return
 	}
 	sa.stores = append(sa.stores, store)
+	// For required resources, get all resources regardless of revisions
+	for _, rev := range extractRevisions(c).UnsortedList() {
+		requiredStore, err := crdclient.NewForSchemas(c, rev, "cluster.local", sa.requiredResources)
+		// RunAndWait must be called after NewForSchema so that the informers are all created and started.
+		if err != nil {
+			scope.Analysis.Errorf("error adding kube crdclient: %v", err)
+			return
+		}
+		sa.stores = append(sa.stores, requiredStore)
+	}
+
 	err = store.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
 		// failed resources will never be synced, which causes the process to hang indefinitely.
 		// better to fail fast, and get a good idea for the failure.
@@ -298,6 +314,25 @@ func (sa *IstiodAnalyzer) AddRunningKubeSourceWithRevision(c kubelib.Client, rev
 			scope.Analysis.Errorf("error getting mesh config from running kube source: %v", err)
 		}
 	}
+}
+
+func extractRevisions(c kubelib.Client) sets.Set {
+	revisions := sets.New()
+	webhooks, err := c.Kube().AdmissionregistrationV1().MutatingWebhookConfigurations().List(context.Background(), metav1.ListOptions{
+		LabelSelector: label.IoIstioRev.Name,
+	})
+	if err != nil {
+		return revisions
+	}
+
+	for _, wh := range webhooks.Items {
+		revName, ok := wh.Labels[label.IoIstioRev.Name]
+		if !ok {
+			continue
+		}
+		revisions.Insert(revName)
+	}
+	return revisions
 }
 
 // AddSource adds a source based on user supplied configstore to the current IstiodAnalyzer

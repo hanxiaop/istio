@@ -22,9 +22,11 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	v12 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"istio.io/api/label"
 	"istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pkg/config/analysis"
 	"istio.io/istio/pkg/config/analysis/msg"
@@ -161,6 +163,32 @@ func TestAddRunningKubeSource(t *testing.T) {
 	assert.Equal(t, sa.meshCfg, mesh.DefaultMeshConfig()) // Base default meshcfg
 	g.Expect(sa.meshNetworks.Networks).To(HaveLen(0))
 	g.Expect(sa.stores).To(HaveLen(1))
+}
+
+func TestAddRunningKubeSourceWithRevision(t *testing.T) {
+	g := NewWithT(t)
+
+	mk := kube.NewFakeClient()
+
+	_, err := mk.Kube().AdmissionregistrationV1().MutatingWebhookConfigurations().Create(context.TODO(),
+		&v12.MutatingWebhookConfiguration{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test",
+				Labels: map[string]string{
+					label.IoIstioRev.Name: "1-14-0",
+				},
+			},
+			Webhooks: nil,
+		}, metav1.CreateOptions{})
+	g.Expect(err).To(BeNil())
+
+	sa := NewSourceAnalyzer(blankCombinedAnalyzer, "", "", nil, false, timeout)
+
+	sa.AddRunningKubeSource(mk)
+	assert.Equal(t, sa.meshCfg, mesh.DefaultMeshConfig()) // Base default meshcfg
+	g.Expect(sa.meshNetworks.Networks).To(HaveLen(0))
+	// default store for kubeconfigs, and required config store for revision 1-14-0
+	g.Expect(sa.stores).To(HaveLen(2))
 }
 
 func TestAddRunningKubeSourceWithIstioMeshConfigMap(t *testing.T) {
