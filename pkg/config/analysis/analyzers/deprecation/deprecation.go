@@ -135,6 +135,16 @@ func (*FieldAnalyzer) analyzeVirtualService(r *resource.Instance, ctx analysis.C
 				}
 			}
 		}
+		// nolint: staticcheck
+		if httpRoute.GetMirrorPercent() != nil {
+			ctx.Report(collections.IstioNetworkingV1Alpha3Virtualservices.Name(),
+				msg.NewDeprecated(r, replacedMessage("HTTPRoute.mirrorPercent", "HTTPRoute.mirrorPercent")))
+		}
+		// nolint: staticcheck
+		if httpRoute.GetCorsPolicy().GetAllowOrigin() != nil {
+			ctx.Report(collections.IstioNetworkingV1Alpha3Virtualservices.Name(),
+				msg.NewDeprecated(r, replacedMessage("HTTPRoute.corsPolicy.allowOrigin", "HTTPRoute.corsPolicy.allowOrigin")))
+		}
 	}
 }
 

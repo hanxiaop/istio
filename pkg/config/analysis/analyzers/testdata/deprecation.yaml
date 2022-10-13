@@ -24,6 +24,10 @@ spec:
   - fault:
       delay:
         percent: 50
+    mirrorPercent: 1
+    corsPolicy:
+      allowOrigin:
+      - foo
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Sidecar

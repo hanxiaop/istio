@@ -106,6 +106,8 @@ var testGrid = []testCase{
 		expected: []message{
 			{msg.Deprecated, "VirtualService foo/productpage"},
 			{msg.Deprecated, "Sidecar default/no-selector"},
+			{msg.Deprecated, "VirtualService foo/productpage"},
+			{msg.Deprecated, "VirtualService foo/productpage"},
 		},
 	},
 	{
