@@ -58,6 +58,7 @@ import (
 func preCheck() *cobra.Command {
 	var opts clioptions.ControlPlaneOptions
 	var skipControlPlane bool
+	msgThreshold := formatting.MessageThreshold{Level: diag.Warning} // default it warn which may prevent safely upgrade
 	// cmd represents the upgradeCheck command
 	cmd := &cobra.Command{
 		Use:   "precheck",
@@ -88,6 +89,7 @@ func preCheck() *cobra.Command {
 			msgs.Add(nsmsgs...)
 			// Print all the messages to stdout in the specified format
 			msgs = msgs.SortedDedupedCopy()
+			msgs = msgs.FilterOutLowerThan(msgThreshold.Level)
 			output, err := formatting.Print(msgs, msgOutputFormat, colorize)
 			if err != nil {
 				return err
@@ -109,6 +111,8 @@ See %s for more information about causes and resolutions.`, url.ConfigAnalysis)
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&skipControlPlane, "skip-controlplane", false, "skip checking the control plane")
+	cmd.PersistentFlags().Var(&msgThreshold, "output-threshold",
+		fmt.Sprintf("The severity level of precheck messages that will be displayed. Valid values: %v", diag.GetAllLevelStrings()))
 	opts.AttachControlPlaneFlags(cmd)
 	return cmd
 }
