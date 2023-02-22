@@ -564,14 +564,30 @@ func GetNodeMetaData(options MetadataOptions) (*model.Node, error) {
 		}
 	}
 
+	combineMeta := func(m1, m2 map[string]any) map[string]any {
+		if m1 == nil {
+			m1 = map[string]any{}
+		}
+		for k, v := range m2 {
+			m1[k] = v
+		}
+		return m1
+	}
+
 	extractMetadata(options.Envs, IstioMetaPrefix, func(m map[string]any, key string, val string) {
 		m[key] = val
 	}, untypedMeta)
 
 	extractMetadata(options.Envs, IstioMetaJSONPrefix, func(m map[string]any, key string, val string) {
-		err := json.Unmarshal([]byte(val), &m)
+		valObj := make(map[string]any)
+		err := json.Unmarshal([]byte(val), &valObj)
 		if err != nil {
 			log.Warnf("Env variable %s [%s] failed json unmarshal: %v", key, val, err)
+		}
+		if v, ok := m[key].(map[string]any); ok {
+			m[key] = combineMeta(v, valObj)
+		} else {
+			m[key] = valObj
 		}
 	}, untypedMeta)
 

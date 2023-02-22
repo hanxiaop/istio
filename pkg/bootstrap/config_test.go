@@ -90,8 +90,13 @@ func TestGetNodeMetaData(t *testing.T) {
 	expectWorkloadName := "workload"
 	expectExitOnZeroActiveConnections := model.StringBool(true)
 
+	pairs := `{"app":"hello","tier":"backend","track":"stable"}`
+	var pairsObj map[string]string
+	err := json.Unmarshal([]byte(pairs), &pairsObj)
 	t.Setenv(IstioMetaPrefix+"OWNER", inputOwner)
 	t.Setenv(IstioMetaPrefix+"WORKLOAD_NAME", inputWorkloadName)
+	t.Setenv(IstioMetaJSONPrefix+"LABELS", pairs)
+	t.Setenv(IstioMetaJSONPrefix+"ANNOTATIONS", pairs)
 
 	dir, _ := os.Getwd()
 	defer os.Chdir(dir)
@@ -100,6 +105,13 @@ func TestGetNodeMetaData(t *testing.T) {
 	os.Chdir(tempDir)
 	os.MkdirAll("./etc/istio/pod/", os.ModePerm)
 	os.WriteFile(constants.PodInfoLabelsPath, []byte(`istio-locality="region.zone.subzone"`), 0o600)
+	// the above file will be set in labels
+	expectedLabels := map[string]string{
+		"istio-locality": "region/zone/subzone",
+	}
+	for k, v := range pairsObj {
+		expectedLabels[k] = v
+	}
 
 	node, err := GetNodeMetaData(MetadataOptions{
 		ID:                          "test",
@@ -115,6 +127,8 @@ func TestGetNodeMetaData(t *testing.T) {
 	g.Expect(node.RawMetadata["OWNER"]).To(Equal(expectOwner))
 	g.Expect(node.RawMetadata["WORKLOAD_NAME"]).To(Equal(expectWorkloadName))
 	g.Expect(node.Metadata.Labels[model.LocalityLabel]).To(Equal("region/zone/subzone"))
+	g.Expect(node.Metadata.Labels).To(Equal(expectedLabels))
+	g.Expect(node.Metadata.Annotations).To(Equal(pairsObj))
 }
 
 func TestConvertNodeMetadata(t *testing.T) {
