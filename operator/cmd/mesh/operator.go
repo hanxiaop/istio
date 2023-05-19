@@ -21,9 +21,10 @@ import (
 // OperatorCmd is a group of commands related to installation and management of the operator controller.
 func OperatorCmd() *cobra.Command {
 	oc := &cobra.Command{
-		Use:   "operator",
-		Short: "Commands related to Istio operator controller.",
-		Long:  "The operator command installs, dumps, removes and shows the status of the operator controller.",
+		Use: "operator",
+		Short: "Commands related to Istio operator controller. " +
+			"(Note: Istio Operator is deprecated, consider using other installation options.)",
+		Long: "The operator command installs, dumps, removes and shows the status of the operator controller.",
 	}
 
 	odArgs := &operatorDumpArgs{}
