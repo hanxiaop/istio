@@ -22,7 +22,9 @@ import (
 	"strings"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	gateway "sigs.k8s.io/gateway-api/apis/v1beta1"
 
 	"istio.io/api/label"
@@ -37,6 +39,7 @@ func TestWaypointList(t *testing.T) {
 		name            string
 		args            []string
 		gateways        []*gateway.Gateway
+		k8sObjects      []runtime.Object
 		expectedOutFile string
 	}{
 		{
@@ -48,6 +51,9 @@ func TestWaypointList(t *testing.T) {
 		{
 			name: "default namespace gateway",
 			args: strings.Split("x waypoint list  -n default", " "),
+			k8sObjects: []runtime.Object{
+				makeNamespace("default", true),
+			},
 			gateways: []*gateway.Gateway{
 				makeGateway("namespace", "default", "", true, true),
 				makeGateway("namespace", "fake", "", true, true),
@@ -61,7 +67,21 @@ func TestWaypointList(t *testing.T) {
 				makeGateway("namespace", "default", "", true, true),
 				makeGateway("namespace", "fake", "", true, true),
 			},
+			k8sObjects: []runtime.Object{
+				makeNamespace("default", true),
+				makeNamespace("fake", true),
+			},
 			expectedOutFile: "all-gateway",
+		},
+		{
+			name: "all namespaces gateways",
+			args: strings.Split("x waypoint list -A", " "),
+			gateways: []*gateway.Gateway{
+				makeGateway("namespace", "default", "", true, true),
+				makeGateway("namespace", "fake", "", true, true),
+			},
+			k8sObjects:      []runtime.Object{},
+			expectedOutFile: "no-gateway",
 		},
 		{
 			name: "have both managed and unmanaged gateways",
@@ -74,12 +94,17 @@ func TestWaypointList(t *testing.T) {
 				makeGateway("no-name-convention", "default", "sa", true, true),
 				makeGatewayWithRevision("bookinfo-rev", "bookinfo", "bookinfo-rev", true, true, "rev1"),
 			},
+			k8sObjects: []runtime.Object{
+				makeNamespace("default", true),
+				makeNamespace("bookinfo", true),
+				makeNamespace("fake", true),
+			},
 			expectedOutFile: "combined-gateway",
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			kubeClient := kube.NewFakeClient()
+			kubeClient := kube.NewFakeClient(tt.k8sObjects...)
 			kubeClientWithRevision = func(ctx *cli.Context, revision string) (kube.CLIClient, error) {
 				return kubeClient, nil
 			}
@@ -143,6 +168,19 @@ func makeGateway(name, namespace, sa string, programmed, isWaypoint bool) *gatew
 		},
 		Status: gateway.GatewayStatus{
 			Conditions: conditions,
+		},
+	}
+}
+
+func makeNamespace(name string, ambientMode bool) *corev1.Namespace {
+	labels := map[string]string{}
+	if ambientMode {
+		labels[constants.DataplaneMode] = constants.DataplaneModeAmbient
+	}
+	return &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   name,
+			Labels: labels,
 		},
 	}
 }

@@ -209,10 +209,18 @@ func waypointCmd(ctx *cli.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if len(gws.Items) == 0 {
-				fmt.Fprintln(writer, "No waypoints found.")
-				return nil
+
+			namespaces, err := kubeClient.Kube().CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+			if err != nil {
+				return fmt.Errorf("error getting namespace: %v", err)
 			}
+			inAmbientMode := map[string]bool{}
+			for _, ns := range namespaces.Items {
+				if ns.Labels[constants.DataplaneMode] == constants.DataplaneModeAmbient {
+					inAmbientMode[ns.Name] = true
+				}
+			}
+
 			w := new(tabwriter.Writer).Init(writer, 0, 8, 5, ' ', 0)
 			slices.SortFunc(gws.Items, func(i, j gateway.Gateway) bool {
 				if i.Namespace <= j.Namespace {
@@ -228,8 +236,16 @@ func waypointCmd(ctx *cli.Context) *cobra.Command {
 				if gw.Spec.GatewayClassName != constants.WaypointGatewayClassName {
 					continue
 				}
+				if !inAmbientMode[gw.Namespace] {
+					continue
+				}
 				filteredGws = append(filteredGws, gw)
 			}
+			if len(filteredGws) == 0 {
+				fmt.Fprintln(writer, "No waypoints found.")
+				return nil
+			}
+
 			if allNamespaces {
 				fmt.Fprintln(w, "NAMESPACE\tNAME\tSERVICE ACCOUNT\tREVISION\tPROGRAMMED")
 			} else {
