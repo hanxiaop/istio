@@ -69,6 +69,14 @@ func preCheck(ctx cli.Context) *cobra.Command {
   # Check only a single namespace
   istioctl x precheck --namespace default`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			msgOutputFormat = strings.ToLower(msgOutputFormat)
+			_, ok := formatting.MsgOutputFormats[msgOutputFormat]
+			if !ok {
+				return CommandParseError{
+					fmt.Errorf("%s not a valid option for format. See istioctl x precheck --help", msgOutputFormat),
+				}
+			}
+
 			cli, err := ctx.CLIClientWithRevision(revision)
 			if err != nil {
 				return err
@@ -109,6 +117,10 @@ See %s for more information about causes and resolutions.`, url.ConfigAnalysis)
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&skipControlPlane, "skip-controlplane", false, "skip checking the control plane")
+	cmd.PersistentFlags().StringVarP(&msgOutputFormat, "output", "o", formatting.LogFormat,
+		fmt.Sprintf("Output format: one of %v", formatting.MsgOutputFormatKeys))
+	cmd.PersistentFlags().BoolVar(&colorize, "color", formatting.IstioctlColorDefault(cmd.OutOrStdout()),
+		"Default true.  Disable with '=false' or set $TERM to dumb")
 	opts.AttachControlPlaneFlags(cmd)
 	return cmd
 }
@@ -137,7 +149,7 @@ func checkControlPlane(ctx cli.Context) (diag.Messages, error) {
 
 	sa := local.NewSourceAnalyzer(
 		analysis.Combine("upgrade precheck", &maturity.AlphaAnalyzer{}),
-		resource.Namespace(selectedNamespace),
+		resource.Namespace(ctx.Namespace()),
 		resource.Namespace(ctx.IstioNamespace()),
 		nil,
 	)
