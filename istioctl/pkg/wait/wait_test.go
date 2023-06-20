@@ -61,17 +61,17 @@ func TestWaitCmd(t *testing.T) {
 		},
 		{
 			execClientConfig: cannedResponseMap,
-			args:             strings.Split("--generation=1 virtual-service foo.default", " "),
+			args:             strings.Split("--generation=1 --timeout=20ms virtual-service foo.default", " "),
 			wantException:    false,
 		},
 		{
 			execClientConfig: cannedResponseMap,
-			args:             strings.Split("--generation=1 VirtualService foo.default", " "),
+			args:             strings.Split("--generation=1 --timeout=20ms VirtualService foo.default", " "),
 			wantException:    false,
 		},
 		{
 			execClientConfig: cannedResponseMap,
-			args:             strings.Split("--generation=1 not-service foo.default", " "),
+			args:             strings.Split("--generation=1 --timeout=20ms not-service foo.default", " "),
 			wantException:    true,
 		},
 		{
@@ -82,17 +82,17 @@ func TestWaitCmd(t *testing.T) {
 		},
 		{
 			execClientConfig: cannedResponseMap,
-			args:             strings.Split("--timeout 2s virtualservice foo.default", " "),
+			args:             strings.Split("--timeout 20ms virtualservice foo.default", " "),
 			wantException:    false,
 		},
 		{
 			execClientConfig: cannedResponseMap,
-			args:             strings.Split("--timeout 2s --revision canary virtualservice foo.default", " "),
+			args:             strings.Split("--timeout 20ms --revision canary virtualservice foo.default", " "),
 			wantException:    false,
 		},
 		{
 			execClientConfig: distributionTrackingDisabledResponseMap,
-			args:             strings.Split("--timeout 2s --revision canary virtualservice foo.default", " "),
+			args:             strings.Split("--timeout 20ms --revision canary virtualservice foo.default", " "),
 			wantException:    true,
 			expectedString:   distributionTrackingDisabledErrorString,
 		},
