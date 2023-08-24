@@ -121,7 +121,7 @@ func recreateTestEnv() error {
 		return err
 	}
 
-	testReconcileOperator = istiocontrolplane.NewReconcileIstioOperator(testClient, nil, s)
+	testReconcileOperator = istiocontrolplane.NewReconcileIstioOperator(testClient, s)
 	return nil
 }
 

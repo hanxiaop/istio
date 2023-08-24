@@ -129,7 +129,7 @@ func ManifestGenerate(args *RootArgs, mgArgs *ManifestGenerateArgs, logopts *log
 
 	var kubeClient kube.CLIClient
 	if mgArgs.EnableClusterSpecific {
-		kc, _, err := KubernetesClients(mgArgs.KubeConfigPath, mgArgs.Context, l)
+		kc, err := KubernetesClients(mgArgs.KubeConfigPath, mgArgs.Context, l)
 		if err != nil {
 			return err
 		}

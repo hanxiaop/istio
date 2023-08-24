@@ -300,7 +300,7 @@ func (r *ReconcileIstioOperator) Reconcile(_ context.Context, request reconcile.
 		}
 		scope.Infof("Deleting IstioOperator %s", iopName)
 
-		reconciler, err := helmreconciler.NewHelmReconciler(r.client, r.kubeClient, iopMerged, nil)
+		reconciler, err := helmreconciler.NewHelmReconciler(r.kubeClient, iopMerged, nil)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -383,7 +383,7 @@ func (r *ReconcileIstioOperator) Reconcile(_ context.Context, request reconcile.
 		helmReconcilerOptions.Force = r.options.Force
 	}
 	exists := revtag.PreviousInstallExists(context.Background(), r.kubeClient.Kube())
-	reconciler, err := helmreconciler.NewHelmReconciler(r.client, r.kubeClient, iopMerged, helmReconcilerOptions)
+	reconciler, err := helmreconciler.NewHelmReconciler(r.kubeClient, iopMerged, helmReconcilerOptions)
 	if err != nil {
 		scope.Errorf("Error during reconcile. Error: %s", err)
 		return reconcile.Result{}, err

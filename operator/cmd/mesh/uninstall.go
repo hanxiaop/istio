@@ -131,7 +131,7 @@ func uninstall(cmd *cobra.Command, rootArgs *RootArgs, uiArgs *uninstallArgs, lo
 	if err := configLogs(logOpts); err != nil {
 		return fmt.Errorf("could not configure logs: %s", err)
 	}
-	kubeClient, client, err := KubernetesClients(uiArgs.kubeConfigPath, uiArgs.context, l)
+	kubeClient, err := KubernetesClients(uiArgs.kubeConfigPath, uiArgs.context, l)
 	if err != nil {
 		l.LogAndFatal(err)
 	}
@@ -172,7 +172,7 @@ func uninstall(cmd *cobra.Command, rootArgs *RootArgs, uiArgs *uninstallArgs, lo
 		if err != nil {
 			return err
 		}
-		h, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+		h, err := helmreconciler.NewHelmReconciler(kubeClient, iop, opts)
 		if err != nil {
 			return fmt.Errorf("failed to create reconciler: %v", err)
 		}
@@ -199,7 +199,7 @@ func uninstall(cmd *cobra.Command, rootArgs *RootArgs, uiArgs *uninstallArgs, lo
 		return err
 	}
 	preCheckWarnings(cmd, kubeClientWithRev, uiArgs, iop.Spec.Revision, nil, cpObjects, l, rootArgs.DryRun)
-	h, err = helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+	h, err = helmreconciler.NewHelmReconciler(kubeClient, iop, opts)
 	if err != nil {
 		return fmt.Errorf("failed to create reconciler: %v", err)
 	}

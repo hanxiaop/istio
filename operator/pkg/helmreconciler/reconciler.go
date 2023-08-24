@@ -105,7 +105,7 @@ var (
 )
 
 // NewHelmReconciler creates a HelmReconciler and returns a ptr to it
-func NewHelmReconciler(client client.Client, kubeClient kube.Client, iop *istioV1Alpha1.IstioOperator, opts *Options) (*HelmReconciler, error) {
+func NewHelmReconciler(kubeClient kube.Client, iop *istioV1Alpha1.IstioOperator, opts *Options) (*HelmReconciler, error) {
 	if opts == nil {
 		opts = defaultOptions
 	}
@@ -131,8 +131,12 @@ func NewHelmReconciler(client client.Client, kubeClient kube.Client, iop *istioV
 		iop = &istioV1Alpha1.IstioOperator{}
 		iop.Spec = &v1alpha1.IstioOperatorSpec{}
 	}
+	restClient, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
+	if err != nil {
+		return nil, err
+	}
 	return &HelmReconciler{
-		client:           client,
+		client:           restClient,
 		kubeClient:       kubeClient,
 		iop:              iop,
 		opts:             opts,

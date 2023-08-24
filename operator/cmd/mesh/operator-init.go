@@ -87,7 +87,7 @@ func operatorInitCmd(rootArgs *RootArgs, oiArgs *operatorInitArgs) *cobra.Comman
 func operatorInit(args *RootArgs, oiArgs *operatorInitArgs, l clog.Logger) {
 	initLogsOrExit(args)
 
-	kubeClient, client, err := kubeClients(oiArgs.kubeConfigPath, oiArgs.context, l)
+	kubeClient, err := kubeClients(oiArgs.kubeConfigPath, oiArgs.context, l)
 	if err != nil {
 		l.LogAndFatal(err)
 	}
@@ -151,12 +151,12 @@ func operatorInit(args *RootArgs, oiArgs *operatorInitArgs, l clog.Logger) {
 		}
 	}
 
-	if err := applyManifest(kubeClient, client, mstr, name.IstioOperatorComponentName, opts, iop, l); err != nil {
+	if err := applyManifest(kubeClient, mstr, name.IstioOperatorComponentName, opts, iop, l); err != nil {
 		l.LogAndFatal(err)
 	}
 
 	if customResource != "" {
-		if err := applyManifest(kubeClient, client, customResource, name.IstioOperatorComponentName, opts, iop, l); err != nil {
+		if err := applyManifest(kubeClient, customResource, name.IstioOperatorComponentName, opts, iop, l); err != nil {
 			l.LogAndFatal(err)
 		}
 	}

@@ -73,7 +73,7 @@ func operatorRemoveCmd(rootArgs *RootArgs, orArgs *operatorRemoveArgs) *cobra.Co
 func operatorRemove(cmd *cobra.Command, args *RootArgs, orArgs *operatorRemoveArgs, l clog.Logger) {
 	initLogsOrExit(args)
 
-	kubeClient, client, err := KubernetesClients(orArgs.kubeConfigPath, orArgs.context, l)
+	kubeClient, err := KubernetesClients(orArgs.kubeConfigPath, orArgs.context, l)
 	if err != nil {
 		l.LogAndFatal(err)
 	}
@@ -118,7 +118,7 @@ func operatorRemove(cmd *cobra.Command, args *RootArgs, orArgs *operatorRemoveAr
 			l.LogAndFatal(err)
 		}
 	}
-	reconciler, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, &helmreconciler.Options{DryRun: args.DryRun, Log: l})
+	reconciler, err := helmreconciler.NewHelmReconciler(kubeClient, iop, &helmreconciler.Options{DryRun: args.DryRun, Log: l})
 	if err != nil {
 		l.LogAndFatal(err)
 	}

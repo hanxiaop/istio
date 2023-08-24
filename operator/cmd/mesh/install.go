@@ -25,7 +25,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
 	"istio.io/api/operator/v1alpha1"
@@ -150,7 +149,7 @@ func InstallCmd(logOpts *log.Options) *cobra.Command {
 }
 
 func Install(rootArgs *RootArgs, iArgs *InstallArgs, logOpts *log.Options, stdOut io.Writer, l clog.Logger, p Printer) error {
-	kubeClient, client, err := KubernetesClients(iArgs.KubeConfigPath, iArgs.Context, l)
+	kubeClient, err := KubernetesClients(iArgs.KubeConfigPath, iArgs.Context, l)
 	if err != nil {
 		return err
 	}
@@ -203,7 +202,7 @@ func Install(rootArgs *RootArgs, iArgs *InstallArgs, logOpts *log.Options, stdOu
 
 	// Detect whether previous installation exists prior to performing the installation.
 	exists := revtag.PreviousInstallExists(context.Background(), kubeClient.Kube())
-	iop, err = InstallManifests(iop, iArgs.Force, rootArgs.DryRun, kubeClient, client, iArgs.ReadinessTimeout, l)
+	iop, err = InstallManifests(iop, iArgs.Force, rootArgs.DryRun, kubeClient, iArgs.ReadinessTimeout, l)
 	if err != nil {
 		return fmt.Errorf("failed to install manifests: %v", err)
 	}
@@ -246,7 +245,7 @@ func Install(rootArgs *RootArgs, iArgs *InstallArgs, logOpts *log.Options, stdOu
 //	DryRun  all operations are done but nothing is written
 //
 // Returns final IstioOperator after installation if successful.
-func InstallManifests(iop *v1alpha12.IstioOperator, force bool, dryRun bool, kubeClient kube.Client, client client.Client,
+func InstallManifests(iop *v1alpha12.IstioOperator, force bool, dryRun bool, kubeClient kube.Client,
 	waitTimeout time.Duration, l clog.Logger,
 ) (*v1alpha12.IstioOperator, error) {
 	// Needed in case we are running a test through this path that doesn't start a new process.
@@ -255,7 +254,7 @@ func InstallManifests(iop *v1alpha12.IstioOperator, force bool, dryRun bool, kub
 		DryRun: dryRun, Log: l, WaitTimeout: waitTimeout, ProgressLog: progress.NewLog(),
 		Force: force,
 	}
-	reconciler, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+	reconciler, err := helmreconciler.NewHelmReconciler(kubeClient, iop, opts)
 	if err != nil {
 		return iop, err
 	}

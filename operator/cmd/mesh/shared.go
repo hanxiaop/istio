@@ -23,9 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	"istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/operator/pkg/cache"
@@ -36,6 +33,7 @@ import (
 	"istio.io/istio/operator/pkg/util/clog"
 	"istio.io/istio/pkg/kube"
 	"istio.io/istio/pkg/log"
+	"k8s.io/client-go/rest"
 )
 
 // installerScope is the scope for all commands in the mesh package.
@@ -110,7 +108,7 @@ func Confirm(msg string, writer io.Writer) bool {
 	}
 }
 
-func KubernetesClients(kubeConfigPath, context string, l clog.Logger) (kube.CLIClient, client.Client, error) {
+func KubernetesClients(kubeConfigPath, context string, l clog.Logger) (kube.CLIClient, error) {
 	rc, err := kube.DefaultRestConfig(kubeConfigPath, context, func(config *rest.Config) {
 		// We are running a one-off command locally, so we don't need to worry too much about rate limiting
 		// Bumping this up greatly decreases install time
@@ -118,20 +116,16 @@ func KubernetesClients(kubeConfigPath, context string, l clog.Logger) (kube.CLIC
 		config.Burst = 100
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	kubeClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc), "")
 	if err != nil {
-		return nil, nil, fmt.Errorf("create Kubernetes client: %v", err)
-	}
-	client, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
-	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("create Kubernetes client: %v", err)
 	}
 	if err := k8sversion.IsK8VersionSupported(kubeClient, l); err != nil {
-		return nil, nil, fmt.Errorf("check minimum supported Kubernetes version: %v", err)
+		return nil, fmt.Errorf("check minimum supported Kubernetes version: %v", err)
 	}
-	return kubeClient, client, nil
+	return kubeClient, nil
 }
 
 // applyOptions contains the startup options for applying the manifest.
@@ -146,12 +140,12 @@ type applyOptions struct {
 	WaitTimeout time.Duration
 }
 
-func applyManifest(kubeClient kube.Client, client client.Client, manifestStr string,
+func applyManifest(kubeClient kube.Client, manifestStr string,
 	componentName name.ComponentName, opts *applyOptions, iop *v1alpha1.IstioOperator, l clog.Logger,
 ) error {
 	// Needed in case we are running a test through this path that doesn't start a new process.
 	cache.FlushObjectCaches()
-	reconciler, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, &helmreconciler.Options{DryRun: opts.DryRun, Log: l})
+	reconciler, err := helmreconciler.NewHelmReconciler(kubeClient, iop, &helmreconciler.Options{DryRun: opts.DryRun, Log: l})
 	if err != nil {
 		l.LogAndError(err)
 		return err
