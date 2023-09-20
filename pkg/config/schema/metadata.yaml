@@ -52,6 +52,14 @@ resources:
     proto: "k8s.io.api.apps.v1.DeploymentSpec"
     protoPackage: "k8s.io/api/apps/v1"
 
+  - kind: "DaemonSet"
+    plural: "daemonsets"
+    group: "apps"
+    version: "v1"
+    builtin: true
+    proto: "k8s.io.api.apps.v1.DaemonSetSpec"
+    protoPackage: "k8s.io/api/apps/v1"
+
   - kind: "Endpoints"
     plural: "endpoints"
     version: "v1"
@@ -121,6 +129,43 @@ resources:
     specless: true
     proto: "k8s.io.api.core.v1.ServiceAccount"
     protoPackage: "k8s.io/api/core/v1"
+
+  - kind: "ClusterRole"
+    plural: "clusterroles"
+    group: "rbac.authorization.k8s.io"
+    version: "v1"
+    clusterScoped: true
+    builtin: true
+    specless: true
+    proto: "k8s.io.api.rbac.v1.ClusterRole"
+    protoPackage: "k8s.io/api/rbac/v1"
+
+  - kind: "ClusterRoleBinding"
+    plural: "clusterrolebindings"
+    group: "rbac.authorization.k8s.io"
+    version: "v1"
+    clusterScoped: true
+    builtin: true
+    specless: true
+    proto: "k8s.io.api.rbac.v1.ClusterRoleBinding"
+    protoPackage: "k8s.io/api/rbac/v1"
+
+  - kind: "Role"
+    plural: "roles"
+    group: "rbac.authorization.k8s.io"
+    version: "v1"
+    builtin: true
+    specless: true
+    proto: "k8s.io.api.rbac.v1.Role"
+    protoPackage: "k8s.io/api/rbac/v1"
+
+  - kind: "RoleBinding"
+    plural: "rolebindings"
+    group: "rbac.authorization.k8s.io"
+    version: "v1"
+    builtin: true
+    proto: "k8s.io.api.rbac.v1.RoleBinding"
+    protoPackage: "k8s.io/api/rbac/v1"
 
   - kind: "CertificateSigningRequest"
     plural: "certificatesigningrequests"
