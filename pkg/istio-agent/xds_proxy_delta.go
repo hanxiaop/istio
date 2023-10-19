@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	"istio.io/istio/pilot/pkg/util/protoconv"
 
 	"istio.io/istio/pilot/pkg/features"
 	istiogrpc "istio.io/istio/pilot/pkg/grpc"
@@ -300,7 +301,7 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 	respResources := make([]*discovery.Resource, 0, len(resources))
 	for i := range resources {
 		respResources = append(respResources, &discovery.Resource{
-			Resource: resources[i],
+			Resource: protoconv.MessageToAny(resources[i]),
 		})
 	}
 	resp.Resources = respResources
