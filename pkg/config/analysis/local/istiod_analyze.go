@@ -180,8 +180,8 @@ func (sa *IstiodAnalyzer) Init(cancel <-chan struct{}) error {
 	// Create a store containing mesh config. There should be exactly one.
 	_, err := sa.internalStore.Create(config.Config{
 		Meta: config.Meta{
-			Name:             mesh_const.MeshConfigResourceName.Name.String(),
-			Namespace:        mesh_const.MeshConfigResourceName.Namespace.String(),
+			Name:             mesh_const.MeshConfigResourceName,
+			Namespace:        sa.istioNamespace.String(),
 			GroupVersionKind: gvk.MeshConfig,
 		},
 		Spec: sa.meshCfg,
@@ -192,8 +192,8 @@ func (sa *IstiodAnalyzer) Init(cancel <-chan struct{}) error {
 	// Create a store containing meshnetworks. There should be exactly one.
 	_, err = sa.internalStore.Create(config.Config{
 		Meta: config.Meta{
-			Name:             mesh_const.MeshNetworksResourceName.Name.String(),
-			Namespace:        mesh_const.MeshNetworksResourceName.Namespace.String(),
+			Name:             mesh_const.MeshNetworksResourceName,
+			Namespace:        sa.istioNamespace.String(),
 			GroupVersionKind: gvk.MeshNetworks,
 		},
 		Spec: sa.meshNetworks,

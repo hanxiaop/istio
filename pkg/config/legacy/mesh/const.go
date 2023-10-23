@@ -14,12 +14,10 @@
 
 package mesh
 
-import (
-	"istio.io/istio/pkg/config/resource"
+const (
+	// MeshConfigResourceName is the resource name for the Istio MeshConfig resource.
+	MeshConfigResourceName = "meshconfig"
+
+	// MeshNetworksResourceName is the resource name for the Istio MeshNetworks resource.
+	MeshNetworksResourceName = "meshnetworks"
 )
-
-// MeshConfigResourceName is the resource name for the Istio MeshConfig resource.
-var MeshConfigResourceName = resource.NewFullName("istio-system", "meshconfig")
-
-// MeshNetworksResourceName is the resource name for the Istio MeshNetworks resource.
-var MeshNetworksResourceName = resource.NewFullName("istio-system", "meshnetworks")
