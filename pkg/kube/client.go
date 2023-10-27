@@ -63,6 +63,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
+	gatewayapiv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayapi "sigs.k8s.io/gateway-api/apis/v1alpha2"
 	gatewayapibeta "sigs.k8s.io/gateway-api/apis/v1beta1"
 	gatewayapiclient "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned"
@@ -77,7 +78,6 @@ import (
 	clienttelemetry "istio.io/client-go/pkg/apis/telemetry/v1alpha1"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
 	istiofake "istio.io/client-go/pkg/clientset/versioned/fake"
-	"istio.io/istio/operator/pkg/apis"
 	"istio.io/istio/pkg/cluster"
 	"istio.io/istio/pkg/config/schema/gvk"
 	"istio.io/istio/pkg/kube/informerfactory"
@@ -187,6 +187,9 @@ type CLIClient interface {
 
 	// ApplyYAMLFiles applies the resources in the given YAML files.
 	ApplyYAMLFiles(namespace string, yamlFiles ...string) error
+
+	// ApplyYAMLContents applies the resources in the given YAML strings.
+	ApplyYAMLContents(namespace string, yamls ...string) error
 
 	// ApplyYAMLFilesDryRun performs a dry run for applying the resource in the given YAML files
 	ApplyYAMLFilesDryRun(namespace string, yamlFiles ...string) error
@@ -924,6 +927,20 @@ func (c *client) ApplyYAMLFiles(namespace string, yamlFiles ...string) error {
 	return g.Wait()
 }
 
+func (c *client) ApplyYAMLContents(namespace string, yamls ...string) error {
+	g, _ := errgroup.WithContext(context.TODO())
+	for _, yaml := range yamls {
+		cfgs := yml.SplitString(yaml)
+		for _, cfg := range cfgs {
+			cfg := cfg
+			g.Go(func() error {
+				return c.ssapplyYAML(cfg, namespace, false)
+			})
+		}
+	}
+	return g.Wait()
+}
+
 func (c *client) ApplyYAMLFilesDryRun(namespace string, yamlFiles ...string) error {
 	g, _ := errgroup.WithContext(context.TODO())
 	for _, f := range removeEmptyFiles(yamlFiles) {
@@ -1149,7 +1166,7 @@ func istioScheme() *runtime.Scheme {
 	utilruntime.Must(clientextensions.AddToScheme(scheme))
 	utilruntime.Must(gatewayapi.AddToScheme(scheme))
 	utilruntime.Must(gatewayapibeta.AddToScheme(scheme))
-	utilruntime.Must(apis.AddToScheme(scheme))
+	utilruntime.Must(gatewayapiv1.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	return scheme
 }
