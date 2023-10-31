@@ -233,7 +233,7 @@ func addMeshNetworksFromRegistryGateway(t *testing.T, c *FakeController, watcher
 	}})
 }
 
-func TestSyncAllWorkloads(t *testing.T) {
+func TestSyncAllWorkloadsFromAmbient(t *testing.T) {
 	test.SetForTest(t, &features.EnableAmbientControllers, true)
 
 	s := newAmbientTestServer(t, testC, "")
