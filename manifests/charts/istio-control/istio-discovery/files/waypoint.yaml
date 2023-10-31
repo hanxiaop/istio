@@ -35,13 +35,18 @@ spec:
             "prometheus.io/scrape" "true"
           ) | nindent 8 }}
       labels:
+        {{- $network := valueOrDefault (index .Labels `topology.istio.io/network`) .Values.global.network }}
+        {{- $requiredLabels := .Labels | quote }}
+        {{- if $network }}
+        {{- $requiredLabels := mergeMaps .Labels, (strdict "topology.istio.io/network" $network) | quote }}
+        {{- end }}
         {{- toJsonMap
           (strdict
             "sidecar.istio.io/inject" "false"
             "service.istio.io/canonical-name" .DeploymentName
             "service.istio.io/canonical-revision" "latest"
            )
-          .Labels
+          .requiredLabels
           (strdict
             "istio.io/gateway-name" .Name
             "gateway.istio.io/managed" "istio.io-mesh-controller"
