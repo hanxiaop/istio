@@ -317,6 +317,14 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 }
 
 func forwardDeltaToEnvoy(con *ProxyConnection, resp *discovery.DeltaDiscoveryResponse) {
+	if !v3.IsEnvoyType(resp.TypeUrl) && resp.TypeUrl != v3.WorkloadType {
+		proxyLog.Errorf("Skipping forwarding type url %s to Envoy as is not a valid Envoy type", resp.TypeUrl)
+		return
+	}
+	if con.isClosed() {
+		proxyLog.Errorf("downstream [%d] dropped xds push to Envoy, connection already closed", con.conID)
+		return
+	}
 	if err := sendDownstreamDelta(con.downstreamDeltas, resp); err != nil {
 		select {
 		case con.downstreamError <- err:
