@@ -29,6 +29,7 @@ import (
 	wasmextensions "github.com/envoyproxy/go-control-plane/envoy/extensions/wasm/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 	"github.com/hashicorp/go-multierror"
+	"google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 
 	extensions "istio.io/api/extensions/v1alpha1"
@@ -235,6 +236,13 @@ func convertHTTPWasmConfigFromRemoteToLocal(ec *core.TypedExtensionConfig, wasmH
 		status = marshalFailure
 		return nil, fmt.Errorf("failed to marshal new wasm HTTP filter %+v to protobuf Any: %w", wasmHTTPFilterConfig, err)
 	}
+
+	if proto.Equal(ec.TypedConfig, wasmTypedConfig) {
+		// If the typed config is not changed, we don't need to update the ECDS resource.
+		wasmLog.Debugf("typed config is not changed for wasm HTTP filter %+v", wasmHTTPFilterConfig)
+		return nil, nil
+	}
+
 	ec.TypedConfig = wasmTypedConfig
 	wasmLog.Debugf("new extension config resource %+v", ec)
 
@@ -268,6 +276,13 @@ func convertNetworkWasmConfigFromRemoteToLocal(ec *core.TypedExtensionConfig, wa
 		status = marshalFailure
 		return nil, fmt.Errorf("failed to marshal new wasm Network filter %+v to protobuf Any: %w", wasmNetworkFilterConfig, err)
 	}
+
+	if proto.Equal(ec.TypedConfig, wasmTypedConfig) {
+		// If the typed config is not changed, we don't need to update the ECDS resource.
+		wasmLog.Debugf("typed config is not changed for wasm HTTP filter %+v", wasmNetworkFilterConfig)
+		return nil, nil
+	}
+
 	ec.TypedConfig = wasmTypedConfig
 	wasmLog.Debugf("new extension config resource %+v", ec)
 
