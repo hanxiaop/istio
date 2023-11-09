@@ -20,6 +20,7 @@ import (
 	"time"
 
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	"go.uber.org/atomic"
 	google_rpc "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -60,48 +61,6 @@ func (p *XdsProxy) DeltaAggregatedResources(downstream xds.DeltaDiscoveryStream)
 	}
 	p.registerStream(con)
 	defer p.unregisterStream(con)
-
-	// Handle downstream xds
-	initialRequestsSent := false
-	go func() {
-		// Send initial request
-		p.connectedMutex.RLock()
-		initialRequest := p.initialDeltaHealthRequest
-		p.connectedMutex.RUnlock()
-
-		for {
-			// From Envoy
-			req, err := downstream.Recv()
-			if err != nil {
-				select {
-				case con.downstreamError <- err:
-				case <-con.stopChan:
-				}
-				return
-			}
-			// forward to istiod
-			con.sendDeltaRequest(req)
-			if !initialRequestsSent && req.TypeUrl == v3.ListenerType {
-				// fire off an initial NDS request
-				if _, f := p.handlers[v3.NameTableType]; f {
-					con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
-						TypeUrl: v3.NameTableType,
-					})
-				}
-				// fire off an initial PCDS request
-				if _, f := p.handlers[v3.ProxyConfigType]; f {
-					con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
-						TypeUrl: v3.ProxyConfigType,
-					})
-				}
-				// Fire of a configured initial request, if there is one
-				if initialRequest != nil {
-					con.sendDeltaRequest(initialRequest)
-				}
-				initialRequestsSent = true
-			}
-		}
-	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -190,6 +149,50 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 }
 
 func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
+	initialRequestsSent := atomic.NewBool(false)
+	go func() {
+		// Send initial request
+		p.connectedMutex.RLock()
+		initialRequest := p.initialDeltaHealthRequest
+		p.connectedMutex.RUnlock()
+
+		for {
+			// From Envoy
+			req, err := con.downstreamDeltas.Recv()
+			if err != nil {
+				select {
+				case con.downstreamError <- err:
+				case <-con.stopChan:
+				}
+				return
+			}
+			// forward to istiod
+			con.sendDeltaRequest(req)
+			if !initialRequestsSent.Load() && req.TypeUrl == v3.ListenerType {
+				// fire off an initial NDS request
+				if _, f := p.handlers[v3.NameTableType]; f {
+					con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
+						TypeUrl: v3.NameTableType,
+					})
+				}
+				// fire off an initial PCDS request
+				if _, f := p.handlers[v3.ProxyConfigType]; f {
+					con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
+						TypeUrl: v3.ProxyConfigType,
+					})
+				}
+				// Fire of a configured initial request, if there is one
+				p.connectedMutex.RLock()
+				if initialRequest != nil {
+					con.sendDeltaRequest(initialRequest)
+
+				}
+				p.connectedMutex.RUnlock()
+				initialRequestsSent.Store(true)
+			}
+		}
+	}()
+
 	defer func() {
 		_ = con.upstreamDeltas.CloseSend()
 	}()
@@ -197,6 +200,10 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 		select {
 		case req := <-con.deltaRequestsChan.Get():
 			con.deltaRequestsChan.Load()
+			if req.TypeUrl == v3.HealthInfoType && !initialRequestsSent.Load() {
+				// only send healthcheck probe after LDS request has been sent
+				continue
+			}
 			proxyLog.Debugf("delta request for type url %s", req.TypeUrl)
 			metrics.XdsProxyRequests.Increment()
 			if req.TypeUrl == v3.ExtensionConfigurationType {
@@ -302,7 +309,7 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 
 	respResources := make([]*discovery.Resource, 0, len(resources))
 	for i := range resources {
-		if resources [i] == nil {
+		if resources[i] == nil {
 			continue
 		}
 		respResources = append(respResources, &discovery.Resource{
