@@ -259,19 +259,23 @@ func (p *XdsProxy) handleUpstreamDeltaResponse(con *ProxyConnection) {
 					go p.deltaRewriteAndForward(con, resp, func(resp *discovery.DeltaDiscoveryResponse) {
 						// Forward the response using the thread of `handleUpstreamResponse`
 						// to prevent concurrent access to forwardToEnvoy
+						proxyLog.Infof("forward ECDS resources after converting successfully %+v", resp.Resources)
 						select {
 						case forwardEnvoyCh <- resp:
 						case <-con.stopChan:
 						}
 					})
 				} else {
+					proxyLog.Infof("forward ECDS resources if not converting %+v", resp.Resources)
 					// Otherwise, forward ECDS resource update directly to Envoy.
 					forwardDeltaToEnvoy(con, resp)
 				}
 			default:
+				proxyLog.Infof("forward resources with default setting %+v", resp.Resources)
 				forwardDeltaToEnvoy(con, resp)
 			}
 		case resp := <-forwardEnvoyCh:
+			proxyLog.Infof("forward ECDS resources after receiving from forward channel %+v", resp.Resources)
 			forwardDeltaToEnvoy(con, resp)
 		case <-con.stopChan:
 			return
@@ -287,6 +291,7 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 
 	if err := wasm.MaybeConvertWasmExtensionConfig(resources, p.wasmCache); err != nil {
 		proxyLog.Debugf("sending NACK for ECDS resources %+v", resp.Resources)
+		proxyLog.Infof("failed to convert Wasm extension config: %v", err)
 		con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
 			TypeUrl:       v3.ExtensionConfigurationType,
 			ResponseNonce: resp.Nonce,
@@ -310,6 +315,7 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 }
 
 func forwardDeltaToEnvoy(con *ProxyConnection, resp *discovery.DeltaDiscoveryResponse) {
+	proxyLog.Infof("forward resources in forwardDeltaToEnvoy %+v", resp.Resources)
 	if err := sendDownstreamDelta(con.downstreamDeltas, resp); err != nil {
 		select {
 		case con.downstreamError <- err:
