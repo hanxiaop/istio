@@ -239,8 +239,10 @@ func convertHTTPWasmConfigFromRemoteToLocal(ec *core.TypedExtensionConfig, wasmH
 
 	if proto.Equal(ec.TypedConfig, wasmTypedConfig) {
 		// If the typed config is not changed, we don't need to update the ECDS resource.
-		wasmLog.Debugf("typed config is not changed for wasm HTTP filter %+v", wasmHTTPFilterConfig)
+		wasmLog.Infof("typed config is not changed for wasm HTTP filter %+v", wasmHTTPFilterConfig)
 		return nil, nil
+	} else {
+		wasmLog.Infof("typed config is changed for wasm HTTP filter %+v", wasmHTTPFilterConfig)
 	}
 
 	ec.TypedConfig = wasmTypedConfig
@@ -279,8 +281,10 @@ func convertNetworkWasmConfigFromRemoteToLocal(ec *core.TypedExtensionConfig, wa
 
 	if proto.Equal(ec.TypedConfig, wasmTypedConfig) {
 		// If the typed config is not changed, we don't need to update the ECDS resource.
-		wasmLog.Debugf("typed config is not changed for wasm HTTP filter %+v", wasmNetworkFilterConfig)
+		wasmLog.Infof("typed config is not changed for wasm HTTP filter %+v", wasmNetworkFilterConfig)
 		return nil, nil
+	} else {
+		wasmLog.Infof("typed config is changed for wasm HTTP filter %+v", wasmNetworkFilterConfig)
 	}
 
 	ec.TypedConfig = wasmTypedConfig
