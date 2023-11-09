@@ -31,7 +31,6 @@ import (
 	istiogrpc "istio.io/istio/pilot/pkg/grpc"
 	"istio.io/istio/pilot/pkg/xds"
 	v3 "istio.io/istio/pilot/pkg/xds/v3"
-	"istio.io/istio/pkg/bootstrap"
 	"istio.io/istio/pkg/channels"
 	"istio.io/istio/pkg/istio-agent/metrics"
 	"istio.io/istio/pkg/wasm"
@@ -149,7 +148,7 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 }
 
 func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
-	initialRequestsSent := atomic.NewBool(false)
+	initialDeltaRequestsSent := atomic.NewBool(false)
 	go func() {
 		for {
 			// From Envoy
@@ -163,7 +162,7 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 			}
 			// forward to istiod
 			con.sendDeltaRequest(req)
-			if !initialRequestsSent.Load() && req.TypeUrl == v3.ListenerType {
+			if !initialDeltaRequestsSent.Load() && req.TypeUrl == v3.ListenerType {
 				// fire off an initial NDS request
 				if _, f := p.handlers[v3.NameTableType]; f {
 					con.sendDeltaRequest(&discovery.DeltaDiscoveryRequest{
@@ -178,7 +177,7 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 				}
 
 				// set flag before sending the initial request to prevent race.
-				initialRequestsSent.Store(true)
+				initialDeltaRequestsSent.Store(true)
 				// Fire of a configured initial request, if there is one
 				p.connectedMutex.RLock()
 				initialDeltaRequest := p.initialDeltaHealthRequest
@@ -198,7 +197,7 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 		select {
 		case req := <-con.deltaRequestsChan.Get():
 			con.deltaRequestsChan.Load()
-			if req.TypeUrl == v3.HealthInfoType && !initialRequestsSent.Load() {
+			if req.TypeUrl == v3.HealthInfoType && !initialDeltaRequestsSent.Load() {
 				// only send healthcheck probe after LDS request has been sent
 				continue
 			}
@@ -206,15 +205,6 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 			metrics.XdsProxyRequests.Increment()
 			if req.TypeUrl == v3.ExtensionConfigurationType {
 				p.ecdsLastNonce.Store(req.ResponseNonce)
-			}
-			// override the first xds request node metadata labels
-			if req.Node != nil {
-				node, err := p.ia.generateNodeMetadata()
-				if err != nil {
-					proxyLog.Warnf("Generate node mata failed during reconnect: %v", err)
-				} else if node.ID != "" {
-					req.Node = bootstrap.ConvertNodeToXDSNode(node)
-				}
 			}
 			if err := sendUpstreamDelta(con.upstreamDeltas, req); err != nil {
 				err = fmt.Errorf("upstream send error for type url %s: %v", req.TypeUrl, err)
