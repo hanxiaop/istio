@@ -151,11 +151,6 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 	initialRequestsSent := atomic.NewBool(false)
 	go func() {
-		// Send initial request
-		p.connectedMutex.RLock()
-		initialRequest := p.initialDeltaHealthRequest
-		p.connectedMutex.RUnlock()
-
 		for {
 			// From Envoy
 			req, err := con.downstreamDeltas.Recv()
@@ -181,14 +176,17 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 						TypeUrl: v3.ProxyConfigType,
 					})
 				}
+
+				// set flag before sending the initial request to prevent race.
+				initialRequestsSent.Store(true)
 				// Fire of a configured initial request, if there is one
 				p.connectedMutex.RLock()
-				if initialRequest != nil {
-					con.sendDeltaRequest(initialRequest)
+				initialDeltaRequest := p.initialDeltaHealthRequest
+				if initialDeltaRequest != nil {
+					con.sendDeltaRequest(initialDeltaRequest)
 
 				}
 				p.connectedMutex.RUnlock()
-				initialRequestsSent.Store(true)
 			}
 		}
 	}()
