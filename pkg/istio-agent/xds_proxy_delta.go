@@ -98,7 +98,7 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 	// handle responses from istiod
 	go func() {
 		for {
-			resp, err := deltaUpstream.Recv()
+			resp, err := con.upstreamDeltas.Recv()
 			if err != nil {
 				select {
 				case con.upstreamError <- err:
@@ -116,7 +116,6 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 	go p.handleUpstreamDeltaRequest(con)
 	go p.handleUpstreamDeltaResponse(con)
 
-	// todo wasm load conversion
 	for {
 		select {
 		case err := <-con.upstreamError:
@@ -151,7 +150,7 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 	initialDeltaRequestsSent := atomic.NewBool(false)
 	go func() {
 		for {
-			// From Envoy
+			// recv xds requests from envoy
 			req, err := con.downstreamDeltas.Recv()
 			if err != nil {
 				select {
@@ -307,11 +306,6 @@ func (p *XdsProxy) deltaRewriteAndForward(con *ProxyConnection, resp *discovery.
 	resp.Resources = respResources
 
 	proxyLog.Debugf("forward ECDS resources %+v", resp.Resources)
-
-	if len(resp.Resources) == 0 {
-		proxyLog.Infof("not forwarding empty ECDS response")
-		return
-	}
 
 	forward(resp)
 }
