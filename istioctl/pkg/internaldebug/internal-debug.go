@@ -131,20 +131,20 @@ By default it will use the default serviceAccount from (istio-system) namespace 
 			var xdsRequest *discovery.DiscoveryRequest
 			var namespace, serviceAccount string
 
-			var resourceNames []string
+			query := args[0]
 			if len(args) > 1 {
 				name, ns, err := ctx.InferPodInfoFromTypedResource(args[1], ctx.NamespaceOrDefault(ctx.Namespace()))
 				if err != nil {
 					return err
 				}
-				resourceNames = append(resourceNames, fmt.Sprintf("%s.%s", name, ns))
+				query = fmt.Sprintf("%s?proxyID=%s.%s", args[0], name, ns)
 			}
 			xdsRequest = &discovery.DiscoveryRequest{
-				ResourceNames: resourceNames,
+				ResourceNames: []string{query},
 				Node: &core.Node{
 					Id: "debug~0.0.0.0~istioctl~cluster.local",
 				},
-				TypeUrl: v3.DebugType + "/" + args[0],
+				TypeUrl: v3.DebugType,
 			}
 
 			xdsResponses, err := multixds.MultiRequestAndProcessXds(internalDebugAllIstiod, xdsRequest, centralOpts, ctx.IstioNamespace(),

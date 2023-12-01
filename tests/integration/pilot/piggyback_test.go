@@ -100,6 +100,15 @@ func TestPiggyback(t *testing.T) {
 
 				// Just verify pod A is known to Pilot; implicitly this verifies that
 				// the printing code printed it.
+				if err = expectSubstrings(output, fmt.Sprintf("%s.%s", podName, nsName)); err != nil {
+					return err
+				}
+
+				args = []string{"x", "proxy-status", "--plaintext", "--xds-address", pf.Address()}
+				output, _, err = istioCtl.Invoke(args)
+				if err != nil {
+					return err
+				}
 				return expectSubstrings(output, fmt.Sprintf("%s.%s", podName, nsName))
 			})
 		})
