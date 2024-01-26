@@ -53,3 +53,12 @@ func UnmarshalIstioOperator(iopYAML string, allowUnknownField bool) (*operator_v
 	}
 	return iop, nil
 }
+
+// UnmarshalIstioOperatorSpec unmarshals a string containing IstioOperatorSpec YAML.
+func UnmarshalIstioOperatorSpec(iopYAML string) (*v1alpha1.IstioOperatorSpec, error) {
+	iop := &v1alpha1.IstioOperatorSpec{}
+	if err := yaml.Unmarshal([]byte(iopYAML), iop); err != nil {
+		return nil, fmt.Errorf("could not unmarshal: %v", err)
+	}
+	return iop, nil
+}

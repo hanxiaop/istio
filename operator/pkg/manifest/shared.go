@@ -22,6 +22,9 @@ import (
 	"strconv"
 	"strings"
 
+	"google.golang.org/protobuf/types/known/structpb"
+	"istio.io/istio/pkg/util/protomarshal"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"sigs.k8s.io/yaml"
 
@@ -293,20 +296,69 @@ func readLayeredYAMLs(filenames []string, stdinReader io.Reader) (string, error)
 		if err != nil {
 			return "", err
 		}
+		s, err := convertToInternalIOP(string(b))
+		if err != nil {
+			return "", err
+		}
 		multiple := false
-		multiple, err = hasMultipleIOPs(string(b))
+		multiple, err = hasMultipleIOPs(s)
 		if err != nil {
 			return "", err
 		}
 		if multiple {
 			return "", fmt.Errorf("input file %s contains multiple IstioOperator CRs, only one per file is supported", fn)
 		}
-		ly, err = util.OverlayIOP(ly, string(b))
+		ly, err = util.OverlayIOP(ly, s)
 		if err != nil {
 			return "", err
 		}
 	}
 	return ly, nil
+}
+
+func convertToInternalIOP(b string) (string, error) {
+	// If it's already an IstioOperator, just return it.
+	_, err := istio.UnmarshalIstioOperator(b, false)
+	if err == nil {
+		return b, nil
+	}
+
+	valuesStruct := iopv1alpha1.Values{}
+	if err := util.UnmarshalWithJSONPB(b, &valuesStruct, true); err != nil {
+		return "", err
+	}
+	// TODO deal with not used field
+	valuesStruct.MeshConfig = nil
+
+	iopSpec := v1alpha1.IstioOperatorSpec{}
+	if err := util.UnmarshalWithJSONPB(b, &iopSpec, true); err != nil {
+		return "", err
+	}
+	vYAML, err := protomarshal.ToYAML(&valuesStruct)
+	if err != nil {
+		return "", err
+	}
+	pbStruct := &structpb.Struct{}
+	if err := protomarshal.ApplyYAML(vYAML, pbStruct); err != nil {
+		return "", err
+	}
+
+	iopSpec.Values = pbStruct
+	iop := &iopv1alpha1.IstioOperator{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       name.IstioOperator,
+			APIVersion: iopv1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "internal",
+		},
+		Spec: &iopSpec,
+	}
+	iopYAML, err := yaml.Marshal(iop)
+	if err != nil {
+		return "", err
+	}
+	return string(iopYAML), nil
 }
 
 func hasMultipleIOPs(s string) (bool, error) {
