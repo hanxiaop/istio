@@ -315,6 +315,7 @@ gen: \
 	mod-download-go \
 	go-gen \
 	mirror-licenses \
+	update-deps \
 	format \
 	update-crds \
 	proto \
@@ -323,6 +324,10 @@ gen: \
 	update-golden ## Update all generated code.
 
 gen-check: gen check-clean-repo
+
+update-deps: mod-download-go
+	@echo "Updating dependencies..."
+	./bin/update_deps
 
 CHARTS = gateway default ztunnel istio-operator base "gateways/istio-ingress" "gateways/istio-egress" "istio-control/istio-discovery" istiod-remote istio-cni
 copy-templates:
