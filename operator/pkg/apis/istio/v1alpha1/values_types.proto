@@ -1358,7 +1358,7 @@ message Values {
   CNIConfig cni = 2;
 
   // Configuration for ingress and egress gateways.
-  GatewaysConfig gateways = 5;
+  GatewaysConfig gateways = 5 [deprecated=true];
 
   // Global configuration for Istio components.
   GlobalConfig global = 6;
@@ -1368,6 +1368,8 @@ message Values {
 
   // Configuration for the ZTunnel component.
   google.protobuf.Value ztunnel = 41;
+
+  repeated google.protobuf.Value helmGateways = 44;
 
   // Controls whether telemetry is exported for Pilot.
   TelemetryConfig telemetry = 23;
@@ -1408,6 +1410,7 @@ message Values {
   // Specifies the compatibility version to use. When this is set, the control plane will
   // be configured with the same defaults as the specified version.
   string compatibilityVersion = 43;
+  // Next available 45.
 }
 
 
