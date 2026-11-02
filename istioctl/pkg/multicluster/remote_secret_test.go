@@ -27,6 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -34,10 +35,13 @@ import (
 
 	"istio.io/istio/istioctl/pkg/cli"
 	"istio.io/istio/operator/pkg/manifest"
+	"istio.io/istio/pkg/config/analysis/analyzers"
+	"istio.io/istio/pkg/config/analysis/legacy/util/kuberesource"
 	"istio.io/istio/pkg/config/schema/gvk"
 	"istio.io/istio/pkg/config/schema/gvr"
 	"istio.io/istio/pkg/kube"
 	"istio.io/istio/pkg/kube/multicluster"
+	"istio.io/istio/pkg/slices"
 	"istio.io/istio/pkg/test"
 	"istio.io/istio/pkg/test/env"
 	"istio.io/istio/pkg/test/util/assert"
@@ -468,6 +472,46 @@ func TestGenerateServiceAccount(t *testing.T) {
 	mustFindObject(t, objs, "istio-reader-service-account", "ServiceAccount")
 	mustFindObject(t, objs, "istio-reader-clusterrole-istio-system", "ClusterRole")
 	mustFindObject(t, objs, "istio-reader-clusterrole-istio-system", "ClusterRoleBinding")
+
+	t.Run("analysis-read-permissions", func(t *testing.T) {
+		var role rbacv1.ClusterRole
+		for _, obj := range objs {
+			if obj.GetKind() == "ClusterRole" && obj.GetName() == "istio-reader-clusterrole-istio-system" {
+				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, &role); err != nil {
+					t.Fatal(err)
+				}
+				break
+			}
+		}
+		schemas := kuberesource.ConvertInputsToSchemas(analyzers.AllCombined().Metadata().Inputs).
+			Remove(kuberesource.DefaultRemoteClusterExcludedSchemas().All()...)
+		var missingPermissions []string
+		for _, schema := range schemas.All() {
+			if schema.IsSynthetic() {
+				continue
+			}
+			for _, verb := range []string{"get", "list", "watch"} {
+				allowed := slices.ContainsFunc(role.Rules, func(rule rbacv1.PolicyRule) bool {
+					return len(rule.ResourceNames) == 0 &&
+						(slices.Contains(rule.APIGroups, schema.Group()) || slices.Contains(rule.APIGroups, "*")) &&
+						(slices.Contains(rule.Resources, schema.Plural()) || slices.Contains(rule.Resources, "*")) &&
+						(slices.Contains(rule.Verbs, verb) || slices.Contains(rule.Verbs, "*"))
+				})
+				if !allowed {
+					missingPermissions = append(missingPermissions, fmt.Sprintf("%s %s/%s", verb, schema.Group(), schema.Plural()))
+				}
+			}
+		}
+		knownMissingPermissions := []string{
+			"get gateway.networking.k8s.io/grpcroutes",
+			"get gateway.networking.k8s.io/httproutes",
+			"list gateway.networking.k8s.io/grpcroutes",
+			"list gateway.networking.k8s.io/httproutes",
+			"watch gateway.networking.k8s.io/grpcroutes",
+			"watch gateway.networking.k8s.io/httproutes",
+		}
+		assert.Equal(t, slices.Sort(missingPermissions), knownMissingPermissions)
+	})
 }
 
 func mustFindObject(t test.Failer, objs []manifest.Manifest, name, kind string) {
